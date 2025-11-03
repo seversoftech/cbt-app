@@ -1,4 +1,6 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 
 * {
     margin: 0;
@@ -336,7 +338,6 @@ label:hover {
 }
 
 .stat-icon.questions { color: #6366f1; }
-.stat-icon.subjects { color: #8b5cf6; }
 .stat-icon.tests { color: #10b981; }
 .stat-icon.score { color: #f59e0b; }
 

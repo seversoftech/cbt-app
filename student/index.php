@@ -1,13 +1,19 @@
 <?php include '../includes/header.php'; ?>
 
-
 <div class="card">
     <h1>Welcome to CBT Test</h1>
     <div id="startScreen" style="display: block;">
-        <p id="welcomeMsg">Click Start to begin the 30-minute test.</p>
-        <button id="startBtn" class="btn">Start Test</button>
+        <div id="categoryScreen">
+            <p id="welcomeMsg">Select a subject to begin the 30-minute test.</p>
+            <div id="categoryList" style="display: none;">
+                <select id="categorySelect" class="form-control" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <option value="">Loading subjects...</option>
+                </select>
+                <button id="startBtn" class="btn" style="margin-top: 1rem; width: 100%;">Start Test</button>
+            </div>
+        </div>
         <div id="resumePrompt" style="display: none;">
-            <p>A test is in progress. Do you want to <strong>resume</strong> from Question <span id="resumeQ"></span>?</p>
+            <p>A <strong id="resumeCategory"></strong> test is in progress. Do you want to <strong>resume</strong> from Question <span id="resumeQ"></span>?</p>
             <button id="resumeBtn" class="btn" style="margin-right: 1rem;">Resume</button>
             <button id="restartBtn" class="btn btn-danger">Restart New Test</button>
         </div>
@@ -20,9 +26,9 @@
 <script>
     let questions = [];
     let currentQuestionIndex = 0;
+    let selectedCategory = '';
 
     let totalTestTime = 1800; // 30min
-
 
     // Check state on load
     async function checkTestState() {
@@ -33,45 +39,80 @@
                 if (state.expired) {
                     alert('Test session expired. Starting a new test.');
                     await clearTestSession();
-                    startNewTest();
+                    loadCategories();
                     return;
                 }
-                // Show resume prompt
+                // Show resume prompt with category
+                document.getElementById('resumeCategory').textContent = state.category || 'General';
                 document.getElementById('resumeQ').textContent = state.current_index + 1;
                 document.getElementById('resumePrompt').style.display = 'block';
-                document.getElementById('startBtn').style.display = 'none';
-                document.getElementById('welcomeMsg').style.display = 'none';
+                document.getElementById('categoryScreen').style.display = 'none';
 
                 // Resume button
                 document.getElementById('resumeBtn').addEventListener('click', () => {
                     resumeTest(state);
                 });
-                // Restart button
+                // Restart button - go back to category selection
                 document.getElementById('restartBtn').addEventListener('click', async () => {
                     await clearTestSession();
-                    startNewTest();
+                    loadCategories();
                 });
             } else {
-                // No active test
-                document.getElementById('startBtn').addEventListener('click', startNewTest);
+                // No active test - load categories
+                loadCategories();
             }
         } catch (error) {
             console.error('State check error:', error);
             alert('Error checking test state: ' + error.message);
-            document.getElementById('startBtn').addEventListener('click', startNewTest);
+            loadCategories();
         }
     }
 
+    async function loadCategories() {
+    try {
+        const response = await fetch('../config/get_categories.php');
+        if (!response.ok) throw new Error('Failed to load categories: ' + response.status);
+        const text = await response.text();
+        if (!text.trim()) throw new Error('Empty response from server');
+        const categories = JSON.parse(text);
+        if (!Array.isArray(categories)) throw new Error('Invalid categories format');
+        const select = document.getElementById('categorySelect');
+        select.innerHTML = '<option value="">Select a subject</option>';
+        categories.forEach(cat => {
+            if (cat) { // Skip emptys
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.appendChild(option);
+            }
+        });
+        if (select.options.length <= 1) {
+            select.innerHTML = '<option value="">No subjects available</option>';
+        }
+        document.getElementById('categoryList').style.display = 'block';
+        document.getElementById('startBtn').addEventListener('click', startNewTest);
+    } catch (error) {
+        console.error('Load categories error:', error);
+        alert('Error loading subjects: ' + error.message + '\n\nCheck console for details.');
+     
+    }
+}
+
     async function startNewTest() {
+        const category = document.getElementById('categorySelect').value;
+        if (!category) {
+            alert('Please select a subject.');
+            return;
+        }
+        selectedCategory = category;
         try {
-            // Clear via param (reliable)
-            const response = await fetch('../config/get_questions.php?restart=1');
+            // Fetch questions for selected category
+            const response = await fetch(`../config/get_questions.php?category=${encodeURIComponent(category)}&restart=1`);
             if (!response.ok) throw new Error('Failed to start test');
             const fetchedQuestions = await response.json();
 
-            // Validation (unchanged)
             if (!Array.isArray(fetchedQuestions) || fetchedQuestions.length === 0) {
-                throw new Error('Invalid questions data received. Please try again.');
+                throw new Error(`No questions available for ${category}. Please add some questions first.`);
             }
 
             questions = fetchedQuestions;
@@ -86,6 +127,7 @@
     }
 
     async function resumeTest(state) {
+        selectedCategory = state.category || 'General';
         questions = state.questions;
         currentQuestionIndex = state.current_index;
         testStartTime = state.start_time;
@@ -101,7 +143,14 @@
     }
 
     function displayTestScreen() {
-        let html = '<form id="testForm"><div class="progress"><div class="progress-bar" id="progressBar" style="width:0%"></div></div><div id="timer" class="timer">30:00</div>';
+        let html = `
+            <div style="text-align: center; margin-bottom: 1rem; font-weight: 500; color: #6366f1;">
+                Subject: ${selectedCategory}
+            </div>
+            <form id="testForm">
+                <div class="progress"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+                <div id="timer" class="timer">30:00</div>
+        `;
         questions.forEach((q, index) => {
             html += `<div class="question" style="display: ${index === currentQuestionIndex ? 'block' : 'none'};"><h3>${index+1}. ${q.question}</h3>`;
             ['a', 'b', 'c', 'd'].forEach(opt => {
@@ -112,13 +161,13 @@
             html += '</div>';
         });
         html += `
-    <div class="navigation" style="text-align: center; margin: 2rem 0;">
-        <span id="questionIndicator" style="margin-right: 1rem; font-weight: 500;">Question <span id="currentQ">1</span> of <span id="totalQ">${questions.length}</span></span>
-        <button type="button" id="prevBtn" class="btn" onclick="prevQuestion()" style="display: none; margin-right: 1rem;" disabled>Previous</button>
-        <button type="button" id="nextBtn" class="btn" onclick="nextQuestion()" style="margin-right: 1rem;">Next</button>
-        <button type="button" id="submitBtn" class="btn" onclick="submitTest()" style="display: none;">Submit</button>
-    </div>
-    </form>`;
+            <div class="navigation" style="text-align: center; margin: 2rem 0;">
+                <span id="questionIndicator" style="margin-right: 1rem; font-weight: 500;">Question <span id="currentQ">1</span> of <span id="totalQ">${questions.length}</span></span>
+                <button type="button" id="prevBtn" class="btn" onclick="prevQuestion()" style="display: none; margin-right: 1rem;" disabled>Previous</button>
+                <button type="button" id="nextBtn" class="btn" onclick="nextQuestion()" style="margin-right: 1rem;">Next</button>
+                <button type="button" id="submitBtn" class="btn" onclick="submitTest()" style="display: none;">Submit</button>
+            </div>
+            </form>`;
         document.getElementById('testScreen').innerHTML = html;
         document.getElementById('startScreen').style.display = 'none';
         document.getElementById('testScreen').style.display = 'block';
@@ -143,7 +192,8 @@
                 },
                 body: JSON.stringify({
                     answers,
-                    current_index: currentQuestionIndex
+                    current_index: currentQuestionIndex,
+                    category: selectedCategory
                 })
             });
         } catch (error) {
@@ -151,7 +201,7 @@
         }
     }
 
-    // Navigation
+    // Navigation functions remain the same
     function nextQuestion() {
         if (currentQuestionIndex < questions.length - 1) {
             hideCurrentQuestion();
@@ -254,5 +304,4 @@
     document.addEventListener('DOMContentLoaded', checkTestState);
 </script>
 </body>
-
 </html>

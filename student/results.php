@@ -67,7 +67,7 @@ body { background: #f3f4f6; }
     <p>Score: <strong><?php echo $score; ?> / <?php echo $total; ?></strong> (<?php echo number_format($percentage, 2); ?>%)</p>
     <p>Status: <strong style="color: <?php echo $status === 'Pass' ? '#10b981' : '#ef4444'; ?>; font-size: 1.3rem;"><?php echo $status; ?></strong></p>
     <?php if ($status === 'Pass'): ?>
-        <p class="success">🎉 Congratulations! You've passed the test.</p>
+        <p class="success">Congratulations! You've passed the test.</p>
     <?php else: ?>
         <p class="error">⚠ Keep practicing to improve your score.</p>
     <?php endif; ?>
