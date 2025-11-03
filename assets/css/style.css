@@ -723,3 +723,12 @@ label:hover {
 .clickable:hover .click-icon {
     opacity: 1;
 }
+
+.pagination-ellipsis {
+    display: inline-block;
+    padding: 0 0.5rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin: 0 0.2rem;
+    cursor: default; /* Not clickable */
+}

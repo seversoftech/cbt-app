@@ -115,30 +115,24 @@ $msg_count = $_GET['count'] ?? 0;
 
     <!-- ===== CATEGORY MANAGEMENT SECTION ===== -->
     <div class="card" style="margin-bottom: 1rem; background: #f9fafb;">
-        <h3>Manage Categories <small>(Click to select and delete entire category)</small></h3>
+        <h3>Manage Categories</h3>
+        <p><small>Select a category from the dropdown and click Delete to remove it along with all related questions.</small></p>
         <?php if (empty($categories)): ?>
             <p>No categories available. Add questions with categories first.</p>
         <?php else: ?>
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="background: #f3f4f6;">
-                        <th style="padding: 0.75rem; border: 1px solid #d1d5db;">Category Name</th>
-                        <th style="padding: 0.75rem; text-align:center; border: 1px solid #d1d5db;">Questions Count</th>
-                        <th style="padding: 0.75rem; text-align:center; border: 1px solid #d1d5db;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <form method="GET" style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <select name="delete_category" id="categorySelectDelete" required style="padding: 0.5rem; width: 300px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <option value="">Select a category to delete</option>
                     <?php foreach ($categories as $cat): ?>
-                        <tr style="border: 1px solid #d1d5db;">
-                            <td style="padding: 0.75rem; font-weight: 500;"><?php echo htmlspecialchars($cat['category']); ?></td>
-                            <td style="padding: 0.75rem; text-align: center;"><?php echo $cat['question_count']; ?></td>
-                            <td style="padding: 0.75rem; text-align: center;">
-                                <a href="?delete_category=<?php echo urlencode($cat['category']); ?>" class="btn btn-danger" style="padding: 0.4rem;" onclick="return confirm('Delete entire category "<?php echo htmlspecialchars($cat['category']); ?>" and all <?php echo $cat['question_count']; ?> related questions? This cannot be undone.');">Delete Category</a>
-                            </td>
-                        </tr>
+                        <option value="<?php echo htmlspecialchars($cat['category']); ?>">
+                            <?php echo htmlspecialchars($cat['category']); ?> (<?php echo $cat['question_count']; ?> questions)
+                        </option>
                     <?php endforeach; ?>
-                </tbody>
-            </table>
+                </select>
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure? This will delete the selected category and all ' + (document.getElementById('categorySelectDelete').selectedOptions[0]?.textContent.match(/\((\d+) questions\)/)?.[1] || 0) + ' related questions. This cannot be undone.');">
+                    Delete Selected Category
+                </button>
+            </form>
         <?php endif; ?>
     </div>
 
@@ -200,21 +194,46 @@ $msg_count = $_GET['count'] ?? 0;
         </table>
 
         <!-- ===== PAGINATION ===== -->
-        <?php if ($total_pages > 1): ?>
-            <div style="text-align:center; margin-top: 1rem;">
-                <?php if ($page > 1): ?>
-                    <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="btn">&laquo; Prev</a>
-                <?php endif; ?>
-                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                    <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="btn" style="margin:0 0.2rem; <?php echo ($i == $page) ? 'background:#2563eb;color:#fff;' : ''; ?>">
-                        <?php echo $i; ?>
-                    </a>
-                <?php endfor; ?>
-                <?php if ($page < $total_pages): ?>
-                    <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="btn">Next &raquo;</a>
-                <?php endif; ?>
-            </div>
+      <!-- ===== PAGINATION ===== -->
+<?php if ($total_pages > 1): ?>
+    <div style="text-align:center; margin-top: 1rem;">
+        <?php
+        // Config for smart pagination
+        $delta = 2; // Pages before/after current (total around current: 1 + 2*delta = 5)
+        $show_first_last = true; // Show page 1 and last
+        $ellipsis = '...'; // Text for gaps
+
+        // Prev button
+        if ($page > 1): ?>
+            <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="btn">&laquo; Prev</a>
         <?php endif; ?>
+
+        <?php
+        // Always show page 1
+        if ($show_first_last && $page > $delta + 2): ?>
+            <a href="?page=1&search=<?php echo urlencode($search); ?>" class="btn">1</a>
+            <?php if ($page > $delta + 3): echo '<span class="pagination-ellipsis">' . $ellipsis . '</span>'; endif; ?>
+        <?php endif;
+
+        // Pages around current
+        for ($i = max(2, $page - $delta); $i <= min($total_pages - 1, $page + $delta); $i++): ?>
+            <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="btn" style="margin:0 0.2rem; <?php echo ($i == $page) ? 'background:#2563eb;color:#fff;' : ''; ?>">
+                <?php echo $i; ?>
+            </a>
+        <?php endfor;
+
+        // Always show last page
+        if ($show_first_last && $page < $total_pages - $delta): ?>
+            <?php if ($page < $total_pages - $delta - 1): echo '<span class="pagination-ellipsis">' . $ellipsis . '</span>'; endif; ?>
+            <a href="?page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>" class="btn"><?php echo $total_pages; ?></a>
+        <?php endif; ?>
+
+       
+        <?php if ($page < $total_pages): ?>
+            <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="btn">Next &raquo;</a>
+        <?php endif; ?>
+    </div>
+<?php endif; ?>
     </div>
 </div>
 
