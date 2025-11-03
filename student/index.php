@@ -29,11 +29,13 @@
     let selectedCategory = '';
 
     let totalTestTime = 1800; // 30min
+  
 
     // Check state on load
     async function checkTestState() {
         try {
             const response = await fetch('../config/get_test_state.php');
+            if (!response.ok) throw new Error('Failed to fetch state: ' + response.status);
             const state = await response.json();
             if (state.active) {
                 if (state.expired) {
@@ -54,8 +56,15 @@
                 });
                 // Restart button - go back to category selection
                 document.getElementById('restartBtn').addEventListener('click', async () => {
-                    await clearTestSession();
-                    loadCategories();
+                    console.log('Restart clicked - clearing session...');
+                    const cleared = await clearTestSession();
+                    if (cleared) {
+                        console.log('Session cleared successfully - reloading to category screen');
+                        loadCategories(); // Show categories
+                    } else {
+                        alert('Failed to clear session. Reloading page...');
+                        window.location.reload(); // Fallback
+                    }
                 });
             } else {
                 // No active test - load categories
@@ -69,34 +78,35 @@
     }
 
     async function loadCategories() {
-    try {
-        const response = await fetch('../config/get_categories.php');
-        if (!response.ok) throw new Error('Failed to load categories: ' + response.status);
-        const text = await response.text();
-        if (!text.trim()) throw new Error('Empty response from server');
-        const categories = JSON.parse(text);
-        if (!Array.isArray(categories)) throw new Error('Invalid categories format');
-        const select = document.getElementById('categorySelect');
-        select.innerHTML = '<option value="">Select a subject</option>';
-        categories.forEach(cat => {
-            if (cat) { // Skip emptys
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                select.appendChild(option);
+        try {
+            const response = await fetch('../config/get_categories.php');
+            if (!response.ok) throw new Error('Failed to load categories: ' + response.status);
+            const text = await response.text();
+            if (!text.trim()) throw new Error('Empty response from server');
+            const categories = JSON.parse(text);
+            if (!Array.isArray(categories)) throw new Error('Invalid categories format');
+            const select = document.getElementById('categorySelect');
+            select.innerHTML = '<option value="">Select a subject</option>';
+            categories.forEach(cat => {
+                if (cat) { // Skip emptys
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    select.appendChild(option);
+                }
+            });
+            if (select.options.length <= 1) {
+                select.innerHTML = '<option value="">No subjects available</option>';
             }
-        });
-        if (select.options.length <= 1) {
-            select.innerHTML = '<option value="">No subjects available</option>';
+            document.getElementById('categoryScreen').style.display = 'block'; // Ensure visible
+            document.getElementById('categoryList').style.display = 'block';
+            document.getElementById('resumePrompt').style.display = 'none'; // Hide resume
+            document.getElementById('startBtn').addEventListener('click', startNewTest);
+        } catch (error) {
+            console.error('Load categories error:', error);
+            alert('Error loading subjects: ' + error.message + '\n\nCheck console for details.');
         }
-        document.getElementById('categoryList').style.display = 'block';
-        document.getElementById('startBtn').addEventListener('click', startNewTest);
-    } catch (error) {
-        console.error('Load categories error:', error);
-        alert('Error loading subjects: ' + error.message + '\n\nCheck console for details.');
-     
     }
-}
 
     async function startNewTest() {
         const category = document.getElementById('categorySelect').value;
@@ -108,8 +118,10 @@
         try {
             // Fetch questions for selected category
             const response = await fetch(`../config/get_questions.php?category=${encodeURIComponent(category)}&restart=1`);
-            if (!response.ok) throw new Error('Failed to start test');
-            const fetchedQuestions = await response.json();
+            if (!response.ok) throw new Error('Failed to start test: ' + response.status);
+            const text = await response.text();
+            if (!text.trim()) throw new Error('Empty response from server');
+            const fetchedQuestions = JSON.parse(text);
 
             if (!Array.isArray(fetchedQuestions) || fetchedQuestions.length === 0) {
                 throw new Error(`No questions available for ${category}. Please add some questions first.`);
@@ -185,7 +197,7 @@
             if (nameMatch) answers[nameMatch[1]] = radio.value;
         });
         try {
-            await fetch('../config/update_test_state.php', {
+            const response = await fetch('../config/update_test_state.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -196,6 +208,7 @@
                     category: selectedCategory
                 })
             });
+            if (!response.ok) throw new Error('Save failed: ' + response.status);
         } catch (error) {
             console.error('Save state error:', error);
         }
@@ -286,7 +299,8 @@
 
     async function clearTestSession() {
         try {
-            await fetch('../config/update_test_state.php', {
+            console.log('Clearing session via POST...');
+            const response = await fetch('../config/update_test_state.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -295,8 +309,20 @@
                     clear: true
                 })
             });
+            if (!response.ok) {
+                throw new Error('Clear failed: ' + response.status);
+            }
+            const result = await response.json();
+            if (result.cleared) {
+                console.log('Session cleared successfully');
+                return true;
+            } else {
+                console.warn('Clear response missing "cleared" flag:', result);
+                return false;
+            }
         } catch (error) {
             console.error('Clear session error:', error);
+            return false;
         }
     }
 

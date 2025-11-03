@@ -76,12 +76,14 @@ if ($_POST) {
         <div class="form-group">
             <label for="category">Subject</label>
             <select name="category" id="category" onchange="toggleNewCategory()">
-                <option value="General">General</option>
-                <?php foreach ($categories as $cat): ?>
-                    <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
-                <?php endforeach; ?>
-                <option value="new">Add New Subject</option>
-            </select>
+    <option value="" disabled selected>-- Select Subject or Add New --</option>
+    <option value="new">➕ Add New Subject</option>
+    <option value="General">General</option>
+    <?php foreach ($categories as $cat): ?>
+        <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
+    <?php endforeach; ?>
+</select>
+
             <input type="text" name="new_category" id="newCategory" placeholder="Enter new subject name..." style="display: none; margin-top: 0.5rem;">
         </div>
         

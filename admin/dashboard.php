@@ -40,10 +40,11 @@ $avg_score = round($results['avg_score'] ?? 0, 2);
                     <h3>Total Questions</h3>
                     <p class="stat-value"><?php echo $total_questions; ?></p>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card clickable" id="subjectsCard">
                     <i class="fas fa-book stat-icon subjects"></i>
                     <h3>Total Subjects</h3>
                     <p class="stat-value"><?php echo $total_categories; ?></p>
+                    <i class="fas fa-external-link-alt click-icon" style="font-size: 0.8rem; opacity: 0.7; margin-top: 0.5rem;"></i>
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-clipboard-list stat-icon tests"></i>
@@ -86,6 +87,78 @@ $avg_score = round($results['avg_score'] ?? 0, 2);
     </div>
 </main>
 
+<!-- Subjects Modal -->
+<div id="subjectsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Subjects Overview</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="subjectsList">Loading subjects...</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+</div>
+
 <script src="../assets/js/script.js"></script>
+<script>
+    // Modal functionality for subjects
+    document.addEventListener('DOMContentLoaded', function() {
+        const subjectsCard = document.getElementById('subjectsCard');
+        const modal = document.getElementById('subjectsModal');
+        const closeBtn = document.querySelector('.close');
+
+        if (subjectsCard) {
+            subjectsCard.addEventListener('click', loadSubjectsModal);
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => closeModal());
+        }
+
+        // Close on outside click
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    });
+
+    async function loadSubjectsModal() {
+        const modal = document.getElementById('subjectsModal');
+        const list = document.getElementById('subjectsList');
+        list.innerHTML = '<p>Loading subjects...</p>';
+
+        try {
+            // Fetch subjects with counts (update get_categories.php to return with counts if needed)
+            const response = await fetch('../config/get_categories.php?with_counts=1');
+            if (!response.ok) throw new Error('Failed to load subjects');
+            const subjects = await response.json();
+
+            if (subjects.length === 0) {
+                list.innerHTML = '<p>No subjects available.</p>';
+            } else {
+                let html = '<ul class="subjects-ul">';
+                subjects.forEach(subject => {
+                    html += `<li><strong>${subject.category}</strong> <span class="subject-count">(${subject.count} questions)</span></li>`;
+                });
+                html += '</ul>';
+                list.innerHTML = html;
+            }
+        } catch (error) {
+            console.error('Error loading subjects:', error);
+            list.innerHTML = '<p>Error loading subjects. Please try again.</p>';
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('subjectsModal').style.display = 'none';
+    }
+</script>
 </body>
 </html>
