@@ -22,14 +22,63 @@
         <!-- Loaded via JS -->
     </div>
 </div>
+
+<!-- Notification Modal -->
+<div id="notificationModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 id="modalTitle">Notification</h3>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="modalMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="closeModal()">OK</button>
+        </div>
+    </div>
+</div>
+
 <script src="../assets/js/script.js"></script>
 <script>
     let questions = [];
     let currentQuestionIndex = 0;
     let selectedCategory = '';
 
-    let totalTestTime = 1800; // 30min
+    let totalTestTime = 1800; 
   
+
+    // Modal functions
+    function showModal(message, type = 'info', title = 'Notification') {
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalMessage').textContent = message;
+        const modal = document.getElementById('notificationModal');
+        const header = document.querySelector('.modal-header');
+        header.className = 'modal-header'; // Reset
+        if (type === 'error') {
+            header.style.borderBottomColor = '#ef4444';
+            header.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+        } else if (type === 'warning') {
+            header.style.borderBottomColor = '#f59e0b';
+            header.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
+        } else if (type === 'success') {
+            header.style.borderBottomColor = '#10b981';
+            header.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+        }
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('notificationModal').style.display = 'none';
+    }
+
+    // Close modal on outside click
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('notificationModal');
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    });
 
     // Check state on load
     async function checkTestState() {
@@ -39,7 +88,7 @@
             const state = await response.json();
             if (state.active) {
                 if (state.expired) {
-                    alert('Test session expired. Starting a new test.');
+                    showModal('Test session expired. Starting a new test.', 'warning');
                     await clearTestSession();
                     loadCategories();
                     return;
@@ -62,7 +111,7 @@
                         console.log('Session cleared successfully - reloading to category screen');
                         loadCategories(); // Show categories
                     } else {
-                        alert('Failed to clear session. Reloading page...');
+                        showModal('Failed to clear session. Reloading page...', 'error');
                         window.location.reload(); // Fallback
                     }
                 });
@@ -72,7 +121,7 @@
             }
         } catch (error) {
             console.error('State check error:', error);
-            alert('Error checking test state: ' + error.message);
+            showModal('Error checking test state: ' + error.message, 'error');
             loadCategories();
         }
     }
@@ -104,14 +153,14 @@
             document.getElementById('startBtn').addEventListener('click', startNewTest);
         } catch (error) {
             console.error('Load categories error:', error);
-            alert('Error loading subjects: ' + error.message + '\n\nCheck console for details.');
+            showModal('Error loading subjects: ' + error.message + '\n\nCheck console for details.', 'error');
         }
     }
 
     async function startNewTest() {
         const category = document.getElementById('categorySelect').value;
         if (!category) {
-            alert('Please select a subject.');
+            showModal('Please select a subject.', 'warning');
             return;
         }
         selectedCategory = category;
@@ -134,7 +183,7 @@
             displayTestScreen();
         } catch (error) {
             console.error('Start test error:', error);
-            alert('Error starting test: ' + error.message);
+            showModal('Error starting test: ' + error.message, 'error');
         }
     }
 

@@ -52,20 +52,32 @@ function updateTimerDisplay() {
 }
 
 // Submit - Safe with checks
+// Add/update in script.js or inline
 async function submitTest() {
-    stopTimer();
-    const form = document.getElementById('testForm');
-    if (!form) {
-        alert('Test form not found. Please restart.');
-        return;
-    }
-    const formData = new FormData(form);
+    const answers = {};
+    document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
+        const nameMatch = radio.name.match(/q(\d+)/);
+        if (nameMatch) answers[nameMatch[1]] = radio.value;
+    });
+
+    // Score using remapped correct_answers (from session)
+    let score = 0;
+    questions.forEach((q, index) => {
+        if (answers[index] === q.correct_answer) score++; // Uses shuffled correct
+    });
+
+    // Send to results.php
+    const formData = new FormData();
+    formData.append('score', score);
+    formData.append('total', questions.length);
+    formData.append('category', selectedCategory); // Optional, for logging
+
     try {
         const response = await fetch('../student/results.php', { method: 'POST', body: formData });
         const data = await response.json();
-        window.location.href = `results.php?score=${data.score}&total=${data.total}`;
+        window.location.href = `../student/results.php?score=${data.score}&total=${data.total}&category=${encodeURIComponent(selectedCategory)}`;
     } catch (error) {
-        alert('Error submitting: ' + error.message);
+        console.error('Submit error:', error);
     }
 }
 
