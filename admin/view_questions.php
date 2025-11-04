@@ -236,7 +236,9 @@ $msg_count = $_GET['count'] ?? 0;
 <?php endif; ?>
     </div>
 </div>
-
+<?php 
+include '../includes/footer.php'; 
+?>
 <script src="../assets/js/script.js"></script>
 </body>
 </html>

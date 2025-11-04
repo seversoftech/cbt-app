@@ -735,3 +735,115 @@ label:hover {
     margin: 0 0.2rem;
     cursor: default; /* Not clickable */
 }
+
+/* Ultra-Compact Sticky Footer */
+.app-footer {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: #e2e8f0;
+    padding: 0.5rem 0 0.25rem; /* Minimal vertical padding */
+    margin-top: auto;
+    font-size: 0.75rem; /* Tiny base */
+    flex-shrink: 0; /* Prevents compression */
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Tighter columns */
+    gap: 0.5rem; /* Minimal gap */
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 0.5rem; /* Reduced side padding */
+}
+
+.footer-section h4 {
+    color: #ffffff;
+    margin-bottom: 0.25rem; /* Super tight */
+    font-size: 0.875rem; /* Smaller */
+    font-weight: 600;
+}
+
+.footer-section p, .footer-section ul {
+    color: #cbd5e0;
+    line-height: 1.3; /* Very tight lines */
+    margin-bottom: 0.125rem; /* Bare minimum */
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section li {
+    margin-bottom: 0.125rem; /* Compact */
+}
+
+.footer-section a {
+    color: #a0aec0;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-section a:hover {
+    color: #6366f1;
+}
+
+.social-links {
+    display: flex;
+    gap: 0.25rem; /* Tiny gaps */
+    margin-top: 0.25rem;
+}
+
+.social-links a {
+    width: 28px; /* Smaller icons */
+    height: 28px;
+    font-size: 0.75rem;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    padding: 0.25rem 0.5rem; /* Ultra-tight */
+    margin-top: 0.5rem;
+    color: #a0aec0;
+    font-size: 0.7rem; /* Micro copyright */
+}
+
+/* Responsive - Ultra-compact mobile */
+@media (max-width: 768px) {
+    .app-footer {
+        padding: 0.25rem 0 0.125rem;
+        font-size: 0.7rem;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+        text-align: center;
+        padding: 0 0.25rem;
+    }
+    
+    .social-links {
+        justify-content: center;
+        gap: 0.125rem;
+    }
+    
+    .footer-section h4 {
+        font-size: 0.75rem;
+    }
+    
+    .footer-bottom {
+        margin-top: 0.25rem;
+        padding: 0.125rem 0.25rem;
+    }
+}
+
+/* Sticky Footer Magic - Add/Ensure in Base Body Styles */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Full viewport height */
+}
+
+main, .card { /* Target your main content wrappers */
+    flex: 1; /* Grow to fill space, push footer down */
+}

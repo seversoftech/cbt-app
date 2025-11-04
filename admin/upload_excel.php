@@ -35,7 +35,9 @@ if ($_POST && isset($_FILES['excel']['tmp_name'])) {
             <button type="submit" class="btn" style="flex: 1;">Upload</button>
         </div>
     </form>
-</div>
+</div><?php 
+include '../includes/footer.php'; 
+?>
 
 <script src="../assets/js/script.js"></script>
 </body></html>

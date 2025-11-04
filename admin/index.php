@@ -69,7 +69,9 @@ include '../includes/header.php';
         © <?php echo date('Y'); ?> CBT Admin Panel (Seversoft)
     </p>
 </div>
-
+<?php 
+include '../includes/footer.php'; 
+?>
 <script>
 // Toggle show/hide password
 const togglePassword = document.getElementById('togglePassword');

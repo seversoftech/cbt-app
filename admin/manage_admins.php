@@ -428,7 +428,9 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </form>
         </div>
     </div>
-</div>
+</div><?php 
+include '../includes/footer.php'; 
+?>
 
 <script>
 const editModal = document.getElementById('editModal');

@@ -102,6 +102,9 @@ $avg_score = round($results['avg_score'] ?? 0, 2);
         </div>
     </div>
 </div>
+<?php 
+include '../includes/footer.php'; 
+?>
 
 <script src="../assets/js/script.js"></script>
 <script>

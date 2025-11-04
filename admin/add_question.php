@@ -94,7 +94,9 @@ if ($_POST) {
         </div>
     </form>
 </div>
-
+<?php 
+include '../includes/footer.php'; 
+?>
 <script src="../assets/js/script.js"></script>
 <script>
 // Toggle new category input

@@ -1,4 +1,7 @@
-<?php include '../includes/header.php'; ?>
+<?php include '../includes/header.php';
+// include '../includes/footer.php'; 
+?>
+
 
 <div class="card">
     <h1>Welcome to CBT Test</h1>
@@ -38,6 +41,11 @@
         </div>
     </div>
 </div>
+
+<?php 
+include '../includes/footer.php'; 
+?>
+
 
 <script src="../assets/js/script.js"></script>
 <script>

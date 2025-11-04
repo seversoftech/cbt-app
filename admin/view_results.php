@@ -119,7 +119,9 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php endif; ?>
         </div>
     <?php endif; ?>
-</div>
+</div><?php 
+include '../includes/footer.php'; 
+?>
 
 <script src="../assets/js/script.js"></script>
 </body></html>

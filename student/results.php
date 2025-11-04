@@ -76,6 +76,10 @@ body { background: #f3f4f6; }
     </div>
 </div>
 
+<?php 
+include '../includes/footer.php'; 
+?>
+
 <script src="../assets/js/script.js"></script>
 </body>
 </html>
