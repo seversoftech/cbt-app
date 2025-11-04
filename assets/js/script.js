@@ -1,14 +1,6 @@
-// assets/js/script.js - Full Timer Implementation
-let timeLeft = 30 * 60; // Default 30min
-let timer;
-let testStartTime; // For resume
-let originalTimeLeft = 1800; // For resume calc
-
-// Prevent back button (original, safe)
 window.history.pushState(null, null, window.location.href);
 window.onpopstate = () => window.history.go(1);
 
-// Full Timer Functions
 function startTimer(startTime = null, totalTime = 1800) {
     testStartTime = startTime || Date.now() / 1000;
     originalTimeLeft = totalTime;
@@ -18,7 +10,6 @@ function startTimer(startTime = null, totalTime = 1800) {
         return;
     }
 
-    // Calculate initial time left
     const now = Date.now() / 1000;
     const elapsed = Math.floor(now - testStartTime);
     timeLeft = Math.max(0, originalTimeLeft - elapsed);
@@ -29,9 +20,8 @@ function startTimer(startTime = null, totalTime = 1800) {
         updateTimerDisplay();
         if (timeLeft <= 0) {
             stopTimer();
-            submitTest(); // Auto-submit on expiry
+            submitTest();
         }
-        // Urgency color
         if (timeLeft < 300) timerEl.style.color = '#ef4444';
     }, 1000);
 }
@@ -51,8 +41,6 @@ function updateTimerDisplay() {
     timerEl.innerHTML = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-// Submit - Safe with checks
-// Add/update in script.js or inline
 async function submitTest() {
     const answers = {};
     document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
@@ -60,17 +48,15 @@ async function submitTest() {
         if (nameMatch) answers[nameMatch[1]] = radio.value;
     });
 
-    // Score using remapped correct_answers (from session)
     let score = 0;
     questions.forEach((q, index) => {
-        if (answers[index] === q.correct_answer) score++; // Uses shuffled correct
+        if (answers[index] === q.correct_answer) score++;
     });
 
-    // Send to results.php
     const formData = new FormData();
     formData.append('score', score);
     formData.append('total', questions.length);
-    formData.append('category', selectedCategory); // Optional, for logging
+    formData.append('category', selectedCategory);
 
     try {
         const response = await fetch('../student/results.php', { method: 'POST', body: formData });
@@ -81,7 +67,5 @@ async function submitTest() {
     }
 }
 
-// No auto-start; inline handles
 document.addEventListener('DOMContentLoaded', () => {
-    // Only non-conflicting init here
 });

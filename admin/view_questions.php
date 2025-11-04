@@ -90,6 +90,54 @@ $msg_count = $_GET['count'] ?? 0;
 ?>
 
 <?php include '../includes/header.php'; ?>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background-color: #fff;
+    margin: auto;
+    padding: 0;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.modal-header {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.close:hover { color: #000; }
+.modal-body {
+    padding: 1rem;
+}
+.modal-footer {
+    padding: 1rem;
+    border-top: 1px solid #eee;
+    text-align: right;
+}
+</style>
+
 <div class="card">
     <h2>Manage Questions</h2>
     
@@ -120,7 +168,9 @@ $msg_count = $_GET['count'] ?? 0;
         <?php if (empty($categories)): ?>
             <p>No categories available. Add questions with categories first.</p>
         <?php else: ?>
-            <form method="GET" style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <form id="categoryDeleteForm" method="GET" style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                <input type="hidden" name="page" value="<?php echo $page; ?>">
                 <select name="delete_category" id="categorySelectDelete" required style="padding: 0.5rem; width: 300px; border: 1px solid #d1d5db; border-radius: 4px;">
                     <option value="">Select a category to delete</option>
                     <?php foreach ($categories as $cat): ?>
@@ -129,7 +179,7 @@ $msg_count = $_GET['count'] ?? 0;
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure? This will delete the selected category and all ' + (document.getElementById('categorySelectDelete').selectedOptions[0]?.textContent.match(/\((\d+) questions\)/)?.[1] || 0) + ' related questions. This cannot be undone.');">
+                <button type="button" class="btn btn-danger" onclick="handleCategoryDeleteConfirm()">
                     Delete Selected Category
                 </button>
             </form>
@@ -182,8 +232,8 @@ $msg_count = $_GET['count'] ?? 0;
                             <td style="padding: 0.75rem;"><?php echo htmlspecialchars($q['category']); ?></td>
                             <td style="padding: 0.75rem;"><?php echo $q['correct_answer']; ?></td>
                             <td style="padding: 0.75rem; text-align: center;">
-                                <a href="?edit=<?php echo $q['id']; ?>" class="btn" style="padding: 0.4rem;">Edit</a>
-                                <a href="?delete=<?php echo $q['id']; ?>" class="btn btn-danger" style="padding: 0.4rem;" onclick="return confirm('Delete this question?');">Delete</a>
+                                <a href="?edit=<?php echo $q['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>" class="btn" style="padding: 0.4rem;">Edit</a>
+                                <button onclick="showConfirmModal('Delete Question', 'Delete this question?', () => window.location.href = '?delete=<?php echo $q['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>');" class="btn btn-danger" style="padding: 0.4rem; border: none; background: #ef4444; color: white; cursor: pointer;">Delete</button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -236,9 +286,76 @@ $msg_count = $_GET['count'] ?? 0;
 <?php endif; ?>
     </div>
 </div>
+
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="confirmTitle">Confirm</h3>
+            <span class="close" onclick="closeConfirmModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="confirmMessage"></p>
+        </div>
+        <div class="modal-footer">
+            <button id="confirmYes" class="btn btn-danger">Yes</button>
+            <button id="confirmNo" class="btn">No</button>
+        </div>
+    </div>
+</div>
+
 <?php 
 include '../includes/footer.php'; 
 ?>
+
 <script src="../assets/js/script.js"></script>
+<script>
+let confirmAction = null;
+
+function showConfirmModal(title, message, action) {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    confirmAction = action;
+    document.getElementById('confirmModal').style.display = 'flex';
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+    confirmAction = null;
+}
+
+function handleCategoryDeleteConfirm() {
+    const select = document.getElementById('categorySelectDelete');
+    if (!select.value) {
+        alert('Please select a category first.'); // Fallback for no selection
+        return;
+    }
+    const countMatch = select.selectedOptions[0].textContent.match(/\((\d+) questions\)/);
+    const count = countMatch ? countMatch[1] : 0;
+    const msg = `Are you sure? This will delete the selected category and all ${count} related questions. This cannot be undone.`;
+    showConfirmModal('Delete Category', msg, () => {
+        document.getElementById('categoryDeleteForm').submit();
+    });
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('confirmYes').addEventListener('click', () => {
+        if (confirmAction) {
+            confirmAction();
+        }
+        closeConfirmModal();
+    });
+    document.getElementById('confirmNo').addEventListener('click', closeConfirmModal);
+
+    // Close on outside click
+    const modal = document.getElementById('confirmModal');
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeConfirmModal();
+        }
+    });
+});
+</script>
 </body>
 </html>
