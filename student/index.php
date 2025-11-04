@@ -36,8 +36,34 @@
         <div class="modal-body">
             <p id="modalMessage"></p>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer" id="modalFooter">
             <button class="btn" onclick="closeModal()">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Test Info Dialog Modal -->
+<div id="infoModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 id="infoTitle">Important Information </h3>
+            <span class="close" onclick="closeInfoModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="infoMessage">
+                <p><strong>Welcome to the CBT Test!</strong></p>
+                <ul>
+                    <li><strong>Duration:</strong> You have exactly <strong>30 minutes</strong> to complete the test. The timer starts immediately upon selecting "Start Test" and cannot be paused.</li>
+                    <li><strong>Questions:</strong> Each subject contains 20 multiple-choice questions (4 options: A, B, C, D). Select only one answer per question.</li>
+                    <li><strong>Scoring:</strong> 1 mark per correct answer. Passing score is 50% (10/20). Results are saved automatically and cannot be retaken without restarting.</li>
+                    <li><strong>Rules:</strong> No external aids or collaboration allowed. The test auto-submits on time expiry. Your session can be resumed if interrupted (browser must remain open).</li>
+                   
+                </ul>
+                <p><em>Read carefully before proceeding. Good luck!</em></p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="acknowledgeBtn" class="btn btn-primary" onclick="closeInfoModal()">I Understand - Proceed</button>
         </div>
     </div>
 </div>

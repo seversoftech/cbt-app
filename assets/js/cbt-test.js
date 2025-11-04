@@ -4,12 +4,15 @@ let selectedCategory = '';
 
 let totalTestTime = 1800; 
 
+let confirmationCallback = null; // To store callback for confirm resolutions
+
 // Modal functions
-function showModal(message, type = 'info', title = 'Notification') {
+function showModal(message, type = 'info', title = 'Notification', isConfirm = false, onConfirm = null) {
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalMessage').textContent = message;
     const modal = document.getElementById('notificationModal');
     const header = document.querySelector('.modal-header');
+    const footer = document.getElementById('modalFooter');
     header.className = 'modal-header'; // Reset
     if (type === 'error') {
         header.style.borderBottomColor = '#ef4444';
@@ -21,18 +24,57 @@ function showModal(message, type = 'info', title = 'Notification') {
         header.style.borderBottomColor = '#10b981';
         header.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
     }
+    // Handle footer for confirmation
+    if (isConfirm) {
+        footer.innerHTML = `
+            <button class="btn btn-danger" id="confirmYesBtn" style="margin-right: 0.5rem;">Yes</button>
+            <button class="btn" id="confirmNoBtn">No</button>
+        `;
+        document.getElementById('confirmYesBtn').addEventListener('click', () => {
+            closeModal();
+            if (onConfirm) onConfirm(true);
+        });
+        document.getElementById('confirmNoBtn').addEventListener('click', () => {
+            closeModal();
+            if (onConfirm) onConfirm(false);
+        });
+        confirmationCallback = onConfirm;
+    } else {
+        footer.innerHTML = '<button class="btn" onclick="closeModal()">OK</button>';
+    }
     modal.style.display = 'flex';
 }
 
-function closeModal() {
+function closeModal(confirmed = false) {
     document.getElementById('notificationModal').style.display = 'none';
+    if (confirmationCallback && !confirmed) {
+        confirmationCallback(false);
+    }
+    confirmationCallback = null;
 }
 
-// Close modal on outside click
+// Info Modal functions
+function showInfoModal() {
+    const modal = document.getElementById('infoModal');
+    modal.style.display = 'flex';
+    // Optional: Store flag to prevent re-showing (e.g., sessionStorage)
+    sessionStorage.setItem('infoShown', 'true');
+}
+
+function closeInfoModal() {
+    document.getElementById('infoModal').style.display = 'none';
+}
+
+// Close modals on outside click
 document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('notificationModal');
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
+    const notificationModal = document.getElementById('notificationModal');
+    notificationModal.addEventListener('click', (e) => {
+        if (e.target === notificationModal) closeModal();
+    });
+
+    const infoModal = document.getElementById('infoModal');
+    infoModal.addEventListener('click', (e) => {
+        if (e.target === infoModal) closeInfoModal();
     });
 });
 
@@ -107,6 +149,11 @@ async function loadCategories() {
         document.getElementById('categoryList').style.display = 'block';
         document.getElementById('resumePrompt').style.display = 'none'; // Hide resume
         document.getElementById('startBtn').addEventListener('click', startNewTest);
+
+        // Show info modal only for new tests (not resumes) and if not already shown in this session
+        if (!sessionStorage.getItem('infoShown')) {
+            showInfoModal();
+        }
     } catch (error) {
         console.error('Load categories error:', error);
         showModal('Error loading subjects: ' + error.message + '\n\nCheck console for details.', 'error');
@@ -178,11 +225,19 @@ function displayTestScreen() {
         html += '</div>';
     });
     html += `
-        <div class="navigation" style="text-align: center; margin: 2rem 0;">
-            <span id="questionIndicator" style="margin-right: 1rem; font-weight: 500;">Question <span id="currentQ">1</span> of <span id="totalQ">${questions.length}</span></span>
-            <button type="button" id="prevBtn" class="btn" onclick="prevQuestion()" style="display: none; margin-right: 1rem;" disabled>Previous</button>
-            <button type="button" id="nextBtn" class="btn" onclick="nextQuestion()" style="margin-right: 1rem;">Next</button>
-            <button type="button" id="submitBtn" class="btn" onclick="submitTest()" style="display: none;">Submit</button>
+        <div class="navigation text-center mt-4">
+            <div class="mb-3">
+                <span id="questionIndicator" class="d-block d-sm-inline fw-semibold text-muted">Question <span id="currentQ">1</span> of <span id="totalQ">${questions.length}</span></span>
+            </div>
+            <div class="d-flex justify-content-center flex-wrap gap-2 mb-3">
+                <button type="button" id="prevBtn" class="btn btn-outline-secondary" onclick="prevQuestion()" style="display: none; min-width: 120px; flex: 1 1 45%;" disabled>Previous</button>
+                <button type="button" id="nextBtn" class="btn btn-primary" onclick="nextQuestion()" style="min-width: 120px; flex: 1 1 45%;">Next</button>
+                <button type="button" id="submitBtn" class="btn btn-success" onclick="submitTest()" style="display: none; min-width: 120px; flex: 1 1 45%;">Submit</button>
+            </div>
+            <p>
+            <div class="w-100">
+                <button type="button" id="exitBtn" class="btn btn-warning w-100" onclick="exitToCategories()">Change Subject</button>
+            </div>
         </div>
         </form>`;
     document.getElementById('testScreen').innerHTML = html;
@@ -331,6 +386,47 @@ async function clearTestSession() {
     }
 }
 
+async function exitToCategories() {
+    showModal(
+        `Are you sure you want to exit? Your progress on "${selectedCategory}" will be lost, and you'll return to subject selection.`,
+        'warning',
+        'Confirm Exit',
+        true, // isConfirm
+        async (confirmed) => {
+            if (confirmed) {
+                try {
+                    // Stop the timer if active
+                    if (typeof stopTimer === 'function') {
+                        stopTimer();
+                    }
+                    // Clear the test session
+                    const cleared = await clearTestSession();
+                    if (cleared) {
+                        // Reset local state
+                        questions = [];
+                        currentQuestionIndex = 0;
+                        selectedCategory = '';
+                        // Switch screens
+                        document.getElementById('testScreen').style.display = 'none';
+                        document.getElementById('startScreen').style.display = 'block';
+                        document.getElementById('categoryScreen').style.display = 'block';
+                        document.getElementById('categoryList').style.display = 'block';
+                        document.getElementById('resumePrompt').style.display = 'none';
+                        // Reload categories to ensure fresh list
+                        await loadCategories();
+                        showModal('Returned to subject selection. Choose a different subject to start.', 'success');
+                    } else {
+                        showModal('Failed to clear session. Please refresh the page.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Exit error:', error);
+                    showModal('Error exiting test: ' + error.message, 'error');
+                }
+            }
+        }
+    );
+}
+
 async function submitTest() {
     // Collect answers (same logic as saveState)
     const answers = {};
@@ -344,11 +440,25 @@ async function submitTest() {
     // Optional: Warn if not all questions answered
     const totalAnswered = Object.keys(answers).length;
     if (totalAnswered < questions.length) {
-        if (!confirm(`You have answered ${totalAnswered} out of ${questions.length} questions. Submit anyway?`)) {
-            return;
-        }
+        showModal(
+            `You have answered ${totalAnswered} out of ${questions.length} questions. Submit anyway?`,
+            'warning',
+            'Confirm Submission',
+            true,
+            async (confirmed) => {
+                if (confirmed) {
+                    await performSubmit(answers);
+                }
+            }
+        );
+        return;
     }
 
+    // If all answered, submit directly
+    await performSubmit(answers);
+}
+
+async function performSubmit(answers) {
     try {
         // Use FormData for POST (matches expected $_POST["q0"], etc.)
         const formData = new FormData();
