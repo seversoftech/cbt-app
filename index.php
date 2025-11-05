@@ -1,3 +1,3 @@
 <?php
 
-header('Location: student/index.php'); 
+header('Location: app/index.php'); 
