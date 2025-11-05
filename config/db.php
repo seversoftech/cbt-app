@@ -12,6 +12,3 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-// Simple admin check (hardcoded for demo; use proper auth in production)
-// define('ADMIN_USER', 'admin');
-// define('ADMIN_PASS', 'password123');

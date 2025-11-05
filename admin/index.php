@@ -66,7 +66,7 @@ include '../includes/header.php';
     </form>
 
     <p style="text-align:center; color:#6b7280; margin-top:1rem; font-size:0.9rem;">
-        © <?php echo date('Y'); ?> CBT Admin Panel (Seversoft)
+        © <?php echo date('Y'); ?> Seversoft CBT Admin Panel (Seversoft)
     </p>
 </div>
 <?php 

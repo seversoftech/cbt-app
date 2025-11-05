@@ -3,8 +3,30 @@
 ?>
 
 
+<style>
+body {
+    background-image: url('/assets/images/bg.jpg'); /* Absolute path from domain root */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    /* Fallback if image fails to load */
+    background-color: #f8f9fa; /* Light gray */
+}
+.card {
+    background: rgba(255, 255, 255, 0.95); 
+    backdrop-filter: blur(10px); 
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.modal-content {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+}
+</style>
+
 <div class="card">
-    <h1>Welcome to CBT Test</h1>
+    <h1>Welcome to Seversoft CBT</h1>
     <div id="startScreen" style="display: block;">
         <div id="categoryScreen">
             <p id="welcomeMsg">Select a subject to begin the 30-minute test.</p>
@@ -51,7 +73,7 @@
         </div>
         <div class="modal-body">
             <div id="infoMessage">
-                <p><strong>Welcome to the CBT Test!</strong></p>
+                <p><strong>Get ready to begin your exam.</strong></p>
                 <ul>
                     <li><strong>Duration:</strong> You have exactly <strong>30 minutes</strong> to complete the test. The timer starts immediately upon selecting "Start Test" and cannot be paused.</li>
                     <li><strong>Questions:</strong> Each subject contains 20 multiple-choice questions (4 options: A, B, C, D). Select only one answer per question.</li>

@@ -6,7 +6,7 @@ $current_year = date('Y');
 <footer class="app-footer">
     <div class="footer-content">
         <div class="footer-section">
-            <h4>CBT App</h4>
+            <h4>Seversoft CBT App</h4>
             <p>A secure platform for computer-based testing. Empowering education with fair, efficient exams.</p>
             <div class="social-links">
                 <!-- Add icons via Font Awesome if included -->
@@ -31,7 +31,7 @@ $current_year = date('Y');
         </div>
     </div>
     <div class="footer-bottom">
-        <p>&copy; <?php echo $current_year; ?> CBT App. All rights reserved. | Built with ❤️ by Seversoft Technologies</p>
+        <p>&copy; <?php echo $current_year; ?> Seversoft CBT App. All rights reserved. | Built with ❤️ by Seversoft Technologies</p>
     </div>
 </footer>
 
