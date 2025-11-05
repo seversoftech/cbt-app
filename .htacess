@@ -1,0 +1,72 @@
+# Enable URL rewriting
+RewriteEngine On
+RewriteBase /
+
+# Security: Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Security: Redirect www to non-www (if someone visits www.cbt.seversoftech.com)
+RewriteCond %{HTTP_HOST} ^www\.cbt\.seversoftech\.com [NC]
+RewriteRule ^ https://cbt.seversoftech.com%{REQUEST_URI} [L,R=301]
+
+# Remove .php extension and redirect explicit .php requests
+# But SKIP if it's an AJAX/JSON request (check Accept header)
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
+RewriteCond %{HTTP:Accept} !application/json [NC]
+RewriteRule ^ %1 [R=301,L]
+
+# Prevent direct access to .php files (optional, for extra enforcement)
+# SKIP if JSON request
+RewriteCond %{ENV:REDIRECT_STATUS} ^$
+RewriteCond %{HTTP:Accept} !application/json [NC]
+RewriteRule ^(.+)\.php$ $1 [R=301,L]
+
+# Internally rewrite URLs without .php to .php files if they exist
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+?)/?$ $1.php [L]
+
+# Redirect non-existent pages to website/404.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ website/404.php [L,NC]
+
+# Security: Prevent access to .htaccess and sensitive files
+<Files ~ "^\.ht|config\.|wp-config\.php|readme\.html|license\.txt">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Security: Disable directory browsing
+Options -Indexes
+
+# Security: Set security headers (CSP removed)
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "DENY"
+Header set X-XSS-Protection "1; mode=block"
+Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+# Security: Disable server signature
+ServerSignature Off
+
+# Performance: Enable compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Performance: Leverage browser caching
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType font/woff2 "access plus 1 month"
+</IfModule>
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# This domain inherits the “PHP” package.
+# php -- END cPanel-generated handler, do not edit

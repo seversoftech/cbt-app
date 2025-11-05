@@ -68,3 +68,4 @@ if (!isset($_SESSION['test_start_time'])) {
     echo json_encode($_SESSION['test_questions']); // Return shuffled (consistent per session)
 }
 ?>
+
