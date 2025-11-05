@@ -5,13 +5,13 @@
 
 <style>
 body {
-    background-image: url('/assets/images/bg.jpg'); /* Absolute path from domain root */
+    background-image: url('/assets/images/bg.jpg'); 
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
     min-height: 100vh;
-    /* Fallback if image fails to load */
+    background-image: url('/assets/images/bg.jpg'); 
     background-color: #f8f9fa; /* Light gray */
 }
 .card {
@@ -76,7 +76,7 @@ body {
                 <p><strong>Get ready to begin your exam.</strong></p>
                 <ul>
                     <li><strong>Duration:</strong> You have exactly <strong>30 minutes</strong> to complete the test. The timer starts immediately upon selecting "Start Test" and cannot be paused.</li>
-                    <li><strong>Questions:</strong> Each subject contains 20 multiple-choice questions (4 options: A, B, C, D). Select only one answer per question.</li>
+                    <li><strong>Questions:</strong> Each subject contains multiple-choice questions (4 options: A, B, C, D). Select only one answer per question.</li>
                     <li><strong>Scoring:</strong> 1 mark per correct answer. Passing score is 50% (10/20). Results are saved automatically and cannot be retaken without restarting.</li>
                     <li><strong>Rules:</strong> No external aids or collaboration allowed. The test auto-submits on time expiry. Your session can be resumed if interrupted (browser must remain open).</li>
                    
