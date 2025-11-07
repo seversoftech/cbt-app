@@ -145,12 +145,11 @@ async function loadCategories() {
         if (select.options.length <= 1) {
             select.innerHTML = '<option value="">No subjects available</option>';
         }
-        document.getElementById('categoryScreen').style.display = 'block'; // Ensure visible
+        document.getElementById('categoryScreen').style.display = 'block'; 
         document.getElementById('categoryList').style.display = 'block';
-        document.getElementById('resumePrompt').style.display = 'none'; // Hide resume
+        document.getElementById('resumePrompt').style.display = 'none';
         document.getElementById('startBtn').addEventListener('click', startNewTest);
 
-        // Show info modal only for new tests (not resumes) and if not already shown in this session
         if (!sessionStorage.getItem('infoShown')) {
             showInfoModal();
         }
@@ -243,7 +242,7 @@ function displayTestScreen() {
     document.getElementById('testScreen').innerHTML = html;
     document.getElementById('startScreen').style.display = 'none';
     document.getElementById('testScreen').style.display = 'block';
-    startTimer(testStartTime, totalTestTime); // Use from script.js
+    startTimer(testStartTime, totalTestTime); 
     updateProgress();
     attachRadioListeners();
     updateNavigation();

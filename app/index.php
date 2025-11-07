@@ -4,26 +4,31 @@
 
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
 body {
+    font-family: 'Montserrat', sans-serif;
     background-image: url('/assets/images/bg.jpg'); 
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
     min-height: 100vh;
-    background-image: url('/assets/images/bg.jpg'); 
-    background-color: #f8f9fa; /* Light gray */
+    background-color: #f8f9fa; 
 }
+
 .card {
     background: rgba(255, 255, 255, 0.95); 
     backdrop-filter: blur(10px); 
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
+
 .modal-content {
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
 }
 </style>
+
 
 <div class="card">
     <h1>Welcome to Seversoft CBT</h1>
@@ -75,12 +80,32 @@ body {
             <div id="infoMessage">
                 <p><strong>Get ready to begin your exam.</strong></p>
                 <ul>
-                    <li><strong>Duration:</strong> You have exactly <strong>30 minutes</strong> to complete the test. The timer starts immediately upon selecting "Start Test" and cannot be paused.</li>
-                    <li><strong>Questions:</strong> Each subject contains multiple-choice questions (4 options: A, B, C, D). Select only one answer per question.</li>
-                    <li><strong>Scoring:</strong> 1 mark per correct answer. Passing score is 50% (10/20). Results are saved automatically and cannot be retaken without restarting.</li>
-                    <li><strong>Rules:</strong> No external aids or collaboration allowed. The test auto-submits on time expiry. Your session can be resumed if interrupted (browser must remain open).</li>
-                   
-                </ul>
+    <li>
+        <strong>Purpose:</strong> 
+        This CBT platform is designed to help students preparing for the <strong>National Certificate Examination</strong> 
+        practice effectively. It provides a simulated computer-based testing environment where learners can familiarize 
+        themselves with the CBT interface and answer similar questions to those they’re likely to encounter in real examinations.
+    </li>
+    <li>
+        <strong>Duration:</strong> 
+        You have exactly <strong>30 minutes</strong> to complete the test. The timer starts immediately upon selecting 
+        "Start Test" and cannot be paused.
+    </li>
+    <li>
+        <strong>Questions:</strong> 
+        Each subject contains multiple-choice questions (4 options: A, B, C, D). Select only one answer per question.
+    </li>
+    <li>
+        <strong>Scoring:</strong> 
+        1 mark per correct answer. Passing score is 50%. Results are saved automatically and cannot be retaken without restarting.
+    </li>
+    <li>
+        <strong>Rules:</strong> 
+        No external aids or collaboration allowed. The test auto-submits on time expiry. Your session can be resumed if interrupted 
+        (browser must remain open).
+    </li>
+</ul>
+
                 <p><em>Read carefully before proceeding. Good luck!</em></p>
             </div>
         </div>
