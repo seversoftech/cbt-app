@@ -1,6 +1,6 @@
 <?php
 require '../config/db.php';
-session_start(); // Access test questions
+session_start(); 
 
 // Handle POST (form submission)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -36,31 +36,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $percentage = ($total > 0) ? ($score / $total) * 100 : 0;
 
-    // Save result in database
     $stmt = $pdo->prepare("INSERT INTO results (score, total_questions, percentage) VALUES (?, ?, ?)");
     $stmt->execute([$score, $total, $percentage]);
 
-    // NEW: Store failed questions in session for display
+    
     $_SESSION['failed_questions'] = $failed_questions;
 
-    // Clear main test session after scoring
+   
     unset($_SESSION['test_questions']);
 
-    // Return JSON response for AJAX (optional)
     echo json_encode(['score' => $score, 'total' => $total, 'percentage' => $percentage]);
     exit;
 }
 
-// Handle GET (display result page)
 $score = (int)($_GET['score'] ?? 0);
 $total = (int)($_GET['total'] ?? 0);
 $percentage = ($total > 0) ? ($score / $total) * 100 : 0;
 $status = $percentage >= 50 ? 'Pass' : 'Fail';
 
-// NEW: Get failed questions from session (if any)
 $failed_questions = $_SESSION['failed_questions'] ?? [];
 if (!empty($failed_questions)) {
-    unset($_SESSION['failed_questions']); // Clear after display
+    unset($_SESSION['failed_questions']); 
 }
 ?>
 <?php include '../includes/header.php'; ?>
@@ -78,7 +74,7 @@ body {
     padding: 0;
 }
 main {
-    min-height: calc(100vh - 200px); /* Adjust based on header/footer heights */
+    min-height: calc(100vh - 200px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -191,12 +187,12 @@ footer {
     background: #1f2937;
     color: white;
     text-align: center;
-    /* Ensure it spans full width */
+    
     position: relative;
     left: 0;
     right: 0;
 }
-/* NEW: Styles for failed questions review */
+
 .review-section {
     margin-top: 2rem;
     background: #fff;

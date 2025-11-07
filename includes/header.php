@@ -6,6 +6,7 @@
     <title><?php echo isset($_SESSION['admin']) ? 'Seversoft CBT Admin Dashboard' : 'Seversoft CBT Exam App'; ?></title>
     <link rel="stylesheet" href="../assets/css/style.css"> 
     <link rel="icon" href="../assets/images/favicon.ico" type="image/x-icon"> 
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap" rel="stylesheet">
+
 
 </head>
