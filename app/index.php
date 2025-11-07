@@ -4,18 +4,19 @@
 
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
 
 body {
-    font-family: 'Montserrat', sans-serif;
-    background-image: url('/assets/images/bg.jpg'); 
+    font-family: 'Lato', Arial, Helvetica, sans-serif;
+    background-image: url('assets/images/bg.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
     min-height: 100vh;
-    background-color: #f8f9fa; 
+    background-color: #f8f9fa;
 }
+
 
 .card {
     background: rgba(255, 255, 255, 0.95); 

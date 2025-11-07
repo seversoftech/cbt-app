@@ -210,7 +210,7 @@ footer {
         <?php if ($status === 'Pass'): ?>
             <div class="message success">
                 <i class="fa-solid fa-trophy me-2"></i>
-                Congratulations! You've passed the test.
+                Congratulations! You passed.
             </div>
             <i class="fa-solid fa-star icon-large text-success"></i>
         <?php else: ?>
