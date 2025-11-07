@@ -58,7 +58,7 @@ include '../includes/header.php';
             <div style="position: relative;">
                 <input type="password" id="password" name="password" placeholder="Enter password" required
                        style="width: 100%; padding: 0.5rem; border:1px solid #d1d5db; border-radius:4px;">
-                <span id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6b7280;">👁️</span>
+                <span id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6b7280;">🙈</span>
             </div>
         </div>
 
@@ -80,7 +80,7 @@ const passwordInput = document.getElementById('password');
 togglePassword.addEventListener('click', () => {
     const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
     passwordInput.setAttribute('type', type);
-    togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+    togglePassword.textContent = type === 'password' ? '🙈' : '👁️';
 });
 </script>
 

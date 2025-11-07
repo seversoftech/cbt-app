@@ -4,7 +4,7 @@ let selectedCategory = '';
 
 let totalTestTime = 1800; 
 
-let confirmationCallback = null; // To store callback for confirm resolutions
+let confirmationCallback = null; 
 
 // Modal functions
 function showModal(message, type = 'info', title = 'Notification', isConfirm = false, onConfirm = null) {
@@ -43,6 +43,11 @@ function showModal(message, type = 'info', title = 'Notification', isConfirm = f
         footer.innerHTML = '<button class="btn" onclick="closeModal()">OK</button>';
     }
     modal.style.display = 'flex';
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) e.stopPropagation();
+    });
+    
 }
 
 function closeModal(confirmed = false) {
