@@ -14,14 +14,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $questions = $_SESSION['test_questions'];
     $score = 0;
     $total = count($questions);
+    $failed_questions = [];
 
     // Loop through questions and compare answers
     foreach ($questions as $index => $q) {
         $ans = $_POST["q{$index}"] ?? '';
         $correct = $q['correct_answer'] ?? '';
-        // Case-insensitive, trimmed comparison
+        
         if (strcasecmp(trim($ans), trim($correct)) === 0) {
             $score++;
+        } else {
+         
+            $failed_questions[] = [
+                'question' => $q['question'],
+                'user_answer' => $ans ? (strtoupper($ans) . '. ' . ($q['option_' . strtolower($ans)] ?? 'No option selected')) : 'No answer selected',
+                'correct_answer' => $correct ? (strtoupper($correct) . '. ' . ($q['option_' . strtolower($correct)] ?? $correct)) : 'No answer provided',
+                'explanation' => $q['explanation'] ?? 'Review the options carefully.' 
+            ];
         }
     }
 
@@ -31,7 +40,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $pdo->prepare("INSERT INTO results (score, total_questions, percentage) VALUES (?, ?, ?)");
     $stmt->execute([$score, $total, $percentage]);
 
-    // Clear session after scoring
+    // NEW: Store failed questions in session for display
+    $_SESSION['failed_questions'] = $failed_questions;
+
+    // Clear main test session after scoring
     unset($_SESSION['test_questions']);
 
     // Return JSON response for AJAX (optional)
@@ -44,6 +56,12 @@ $score = (int)($_GET['score'] ?? 0);
 $total = (int)($_GET['total'] ?? 0);
 $percentage = ($total > 0) ? ($score / $total) * 100 : 0;
 $status = $percentage >= 50 ? 'Pass' : 'Fail';
+
+// NEW: Get failed questions from session (if any)
+$failed_questions = $_SESSION['failed_questions'] ?? [];
+if (!empty($failed_questions)) {
+    unset($_SESSION['failed_questions']); // Clear after display
+}
 ?>
 <?php include '../includes/header.php'; ?>
 
@@ -178,6 +196,61 @@ footer {
     left: 0;
     right: 0;
 }
+/* NEW: Styles for failed questions review */
+.review-section {
+    margin-top: 2rem;
+    background: #fff;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+.review-header {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #dc2626;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.accordion-item {
+    border: none;
+    border-bottom: 1px solid #e5e7eb;
+}
+.accordion-header {
+    background: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+.accordion-body {
+    padding: 1rem;
+    background: #fefefe;
+    border-radius: 8px;
+}
+.failed-q {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+.user-ans {
+    color: #ef4444;
+    font-style: italic;
+    margin-bottom: 0.25rem;
+}
+.correct-ans {
+    color: #10b981;
+    font-weight: 600;
+    background: #ecfdf5;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+.explanation {
+    font-size: 0.95rem;
+    color: #6b7280;
+    font-style: italic;
+}
 @media (max-width: 576px) {
     .card {
         margin: 1rem;
@@ -220,6 +293,38 @@ footer {
             </div>
             <i class="fa-solid fa-chart-line icon-large text-warning"></i>
         <?php endif; ?>
+
+        <!-- NEW: Failed Questions Review Section -->
+        <?php if (!empty($failed_questions)): ?>
+            <div class="review-section">
+                <div class="review-header">
+                    <i class="fa-solid fa-exclamation-circle text-danger"></i>
+                    <span>Review Failed Questions (<?php echo count($failed_questions); ?>)</span>
+                </div>
+                <div class="accordion" id="failedAccordion">
+                    <?php foreach ($failed_questions as $index => $fq): ?>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading<?php echo $index; ?>">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $index; ?>" aria-expanded="false" aria-controls="collapse<?php echo $index; ?>">
+                                    Question <?php echo $index + 1; ?>: <?php echo htmlspecialchars(substr($fq['question'], 0, 50)); ?>...
+                                </button>
+                            </h2>
+                            <div id="collapse<?php echo $index; ?>" class="accordion-collapse collapse" aria-labelledby="heading<?php echo $index; ?>" data-bs-parent="#failedAccordion">
+                                <div class="accordion-body">
+                                    <div class="failed-q"><?php echo htmlspecialchars($fq['question']); ?></div>
+                                    <div class="user-ans"><i class="fa-solid fa-user me-1"></i> Your Answer: <?php echo htmlspecialchars($fq['user_answer']); ?></div>
+                                    <div class="correct-ans"><i class="fa-solid fa-check-circle me-1"></i> Correct Answer: <?php echo htmlspecialchars($fq['correct_answer']); ?></div>
+                                    <?php if (!empty($fq['explanation'])): ?>
+                                        <div class="explanation"><i class="fa-solid fa-info-circle me-1"></i> Note: <?php echo htmlspecialchars($fq['explanation']); ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <div class="mt-4">
             <button onclick="window.location.href='index.php'" class="btn-modern btn-modern-primary">
                 <i class="fa-solid fa-rotate-left"></i> Take Test Again
