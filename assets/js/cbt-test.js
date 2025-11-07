@@ -64,10 +64,19 @@ function showInfoModal() {
     modal.style.display = 'flex';
     // Optional: Store flag to prevent re-showing (e.g., sessionStorage)
     sessionStorage.setItem('infoShown', 'true');
+    //prevent outside click close
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) e.stopPropagation();
+    });
 }
 
 function closeInfoModal() {
     document.getElementById('infoModal').style.display = 'none';
+
+    const modal = document.getElementById('infoModal');
+    modal.removeEventListener('click', (e) => {
+        if (e.target === modal) e.stopPropagation();
+    });
 }
 
 // Close modals on outside click

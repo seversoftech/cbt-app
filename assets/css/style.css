@@ -1057,13 +1057,12 @@ main, .card { /* Target your main content wrappers */
 
 main {
     min-height: calc(100vh - 200px);
-    display: flex;
     align-items: center;
     justify-content: center;
     padding: 1rem;
 }
 .card { 
-    max-width: 500px; 
+    /* max-width: 500px;  */
     width: 100%; 
     margin: 2rem auto; 
     border-radius: 20px; 
