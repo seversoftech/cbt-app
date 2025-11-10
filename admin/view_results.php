@@ -11,10 +11,10 @@ if (isset($_GET['export'])) {
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="cbt_results.csv"');
     $output = fopen('php://output', 'w');
-    fputcsv($output, ['ID', 'Student ID', 'Score', 'Total Questions', 'Percentage', 'Completed At']);
+    fputcsv($output, ['ID', 'Student ID', 'Subject', 'Score', 'Total Questions', 'Percentage', 'Completed At']);
     $stmt = $pdo->query("SELECT * FROM results ORDER BY completed_at DESC");
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        fputcsv($output, [$row['id'], $row['student_id'], $row['score'], $row['total_questions'], $row['percentage'], $row['completed_at']]);
+        fputcsv($output, [$row['id'], $row['student_id'], $row['subject'], $row['score'], $row['total_questions'], $row['percentage'], $row['completed_at']]);
     }
     exit;
 }
@@ -30,7 +30,7 @@ $where = '';
 $params = [];
 
 if ($search !== '') {
-    $where = "WHERE student_id LIKE :search OR completed_at LIKE :search";
+    $where = "WHERE student_id LIKE :search OR subject LIKE :search OR completed_at LIKE :search";
     $params[':search'] = "%$search%";
 }
 
@@ -62,7 +62,7 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         <!-- Search Form -->
         <form method="GET" style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
-            <input type="text" name="search" placeholder="Search Student ID or Date..." 
+            <input type="text" name="search" placeholder="Search Student ID, Subject or Date..." 
                    value="<?php echo htmlspecialchars($search); ?>" 
                    style="padding: 0.5rem; width: 250px;">
             <button type="submit" class="btn">Search</button>
@@ -75,6 +75,7 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <tr style="background: #f3f4f6;">
                 <th style="padding: 0.75rem; text-align: left; border: 1px solid #d1d5db;">ID</th>
                 <th style="padding: 0.75rem; text-align: left; border: 1px solid #d1d5db;">Student ID</th>
+                <th style="padding: 0.75rem; text-align: left; border: 1px solid #d1d5db;">Subject</th>
                 <th style="padding: 0.75rem; text-align: center; border: 1px solid #d1d5db;">Score</th>
                 <th style="padding: 0.75rem; text-align: center; border: 1px solid #d1d5db;">Total Q</th>
                 <th style="padding: 0.75rem; text-align: center; border: 1px solid #d1d5db;">Percentage</th>
@@ -87,6 +88,7 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <tr style="border: 1px solid #d1d5db;">
                         <td style="padding: 0.75rem;"><?php echo $r['id']; ?></td>
                         <td style="padding: 0.75rem;"><?php echo htmlspecialchars($r['student_id']); ?></td>
+                        <td style="padding: 0.75rem;"><?php echo htmlspecialchars($r['subject']); ?></td>
                         <td style="padding: 0.75rem; text-align: center;"><?php echo $r['score']; ?></td>
                         <td style="padding: 0.75rem; text-align: center;"><?php echo $r['total_questions']; ?></td>
                         <td style="padding: 0.75rem; text-align: center;"><?php echo $r['percentage']; ?>%</td>
@@ -94,7 +96,7 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
-                <tr><td colspan="6" style="text-align:center; padding:1rem; color:#6b7280;">No results found.</td></tr>
+                <tr><td colspan="7" style="text-align:center; padding:1rem; color:#6b7280;">No results found.</td></tr>
             <?php endif; ?>
         </tbody>
     </table>

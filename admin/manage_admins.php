@@ -16,7 +16,8 @@ if (empty($_SESSION['csrf_token'])) {
 
 // ADD ADMIN
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_admin') {
-    $username = trim(filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING));
+    $username = trim(filter_input(INPUT_POST, 'username', FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH));
+
     $password = trim($_POST['password']);
     $token = $_POST['csrf_token'] ?? '';
 
