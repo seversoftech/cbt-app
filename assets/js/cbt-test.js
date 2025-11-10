@@ -478,6 +478,7 @@ async function performSubmit(answers) {
         Object.entries(answers).forEach(([index, ans]) => {
             formData.append(`q${index}`, ans);
         });
+        formData.append('subject', selectedCategory); // Add subject to form data
 
         const response = await fetch('results.php', {
             method: 'POST',

@@ -1,4 +1,10 @@
+
+
 <?php
+
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 require '../config/db.php';
 session_start(); 
 
@@ -10,6 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['error' => 'No active test session found']);
         exit;
     }
+
+   // Retrieve subject from POST (sent from JS)
+   $subject = $_POST['subject'] ?? ($_SESSION['test_category'] ?? 'Unknown');
+
+
+
 
     $questions = $_SESSION['test_questions'];
     $score = 0;
@@ -36,14 +48,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $percentage = ($total > 0) ? ($score / $total) * 100 : 0;
 
-    $stmt = $pdo->prepare("INSERT INTO results (score, total_questions, percentage) VALUES (?, ?, ?)");
-    $stmt->execute([$score, $total, $percentage]);
+    $stmt = $pdo->prepare("INSERT INTO results (subject, score, total_questions, percentage) VALUES (?, ?, ?, ?)");
+    $stmt->execute([$subject, $score, $total, $percentage]);
 
     
     $_SESSION['failed_questions'] = $failed_questions;
 
    
     unset($_SESSION['test_questions']);
+    unset($_SESSION['test_subject']); // Clear after use (if existed)
 
     echo json_encode(['score' => $score, 'total' => $total, 'percentage' => $percentage]);
     exit;
