@@ -1,12 +1,8 @@
 
-
 <?php
 
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
 require '../config/db.php';
-session_start(); 
+
 
 // Handle POST (form submission)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -79,15 +75,6 @@ if (!empty($failed_questions)) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 
-<style>
-/* body { 
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); 
-    min-height: 100vh; 
-    margin: 0;
-    padding: 0;
-} */
-
-</style>
 
 <main>
 <div class="card text-center">
