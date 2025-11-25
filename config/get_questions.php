@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 require 'db.php';
-session_start();
+
 
 // Force clear on restart param
 if (isset($_GET['restart'])) {
