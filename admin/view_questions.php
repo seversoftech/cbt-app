@@ -91,59 +91,12 @@ $msg_count = $_GET['count'] ?? 0;
 
 <?php include '../includes/header.php'; ?>
 
-<style>
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    justify-content: center;
-    align-items: center;
-}
-.modal-content {
-    background-color: #fff;
-    margin: auto;
-    padding: 0;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
-.modal-header {
-    padding: 1rem;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-.close:hover { color: #000; }
-.modal-body {
-    padding: 1rem;
-}
-.modal-footer {
-    padding: 1rem;
-    border-top: 1px solid #eee;
-    text-align: right;
-}
-</style>
-
 <div class="card">
     <h2>Manage Questions</h2>
     
     <!-- Messages -->
     <?php if ($msg): ?>
-        <div class="success" style="margin-bottom: 1rem;">
+        <div class="<?php echo strpos($msg, 'deleted') !== false ? 'success' : 'success'; // simple logic for now ?>" style="margin-bottom: 1rem; color: var(--secondary); background: #ecfdf5; padding: 1rem; border-radius: 0.5rem;">
             <?php 
             if ($msg === 'deleted') echo 'Question deleted successfully.';
             elseif ($msg === 'updated') echo 'Question updated successfully.';
@@ -153,34 +106,36 @@ $msg_count = $_GET['count'] ?? 0;
         </div>
     <?php endif; ?>
 
-    <div style="margin-bottom: 1rem;">
-        <a href="dashboard.php" class="btn" style="margin-right: 1rem;">Back to Dashboard</a>
-        <form method="GET" style="display: inline;">
-            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search question or category..." style="padding: 0.5rem; width: 250px;">
+    <div style="margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+        <a href="dashboard.php" class="btn" style="background: var(--text-light);">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <form method="GET" style="display: flex; gap: 0.5rem; flex: 1;">
+            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search question or category..." class="form-control" style="max-width: 300px;">
             <button type="submit" class="btn">Search</button>
         </form>
     </div>
 
     <!-- ===== CATEGORY MANAGEMENT SECTION ===== -->
-    <div class="card" style="margin-bottom: 1rem; background: #f9fafb;">
+    <div class="card" style="margin: 0 0 2rem 0; background: #f9fafb; border: 1px dashed #d1d5db; padding: 1.5rem; width: 100%; box-shadow: none;">
         <h3>Manage Categories</h3>
-        <p><small>Select a category from the dropdown and click Delete to remove it along with all related questions.</small></p>
+        <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">Select a category to delete it along with all its questions.</p>
         <?php if (empty($categories)): ?>
-            <p>No categories available. Add questions with categories first.</p>
+            <p>No categories available.</p>
         <?php else: ?>
-            <form id="categoryDeleteForm" method="GET" style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <form id="categoryDeleteForm" method="GET" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                 <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
                 <input type="hidden" name="page" value="<?php echo $page; ?>">
-                <select name="delete_category" id="categorySelectDelete" required style="padding: 0.5rem; width: 300px; border: 1px solid #d1d5db; border-radius: 4px;">
+                <select name="delete_category" id="categorySelectDelete" required class="form-control" style="max-width: 300px;">
                     <option value="">Select a category to delete</option>
                     <?php foreach ($categories as $cat): ?>
                         <option value="<?php echo htmlspecialchars($cat['category']); ?>">
-                            <?php echo htmlspecialchars($cat['category']); ?> (<?php echo $cat['question_count']; ?> questions)
+                            <?php echo htmlspecialchars($cat['category']); ?> (<?php echo $cat['question_count']; ?>)
                         </option>
                     <?php endforeach; ?>
                 </select>
                 <button type="button" class="btn btn-danger" onclick="handleCategoryDeleteConfirm()">
-                    Delete Selected Category
+                    Delete Category
                 </button>
             </form>
         <?php endif; ?>
@@ -188,57 +143,92 @@ $msg_count = $_GET['count'] ?? 0;
 
     <?php if ($edit_q): ?>
         <!-- ===== EDIT FORM ===== -->
-        <div class="card" style="margin-bottom: 1rem; background: #f9fafb;">
+        <div class="card" style="margin: 0 0 2rem 0; background: #fef3c7; border: 1px solid #fcd34d; width: 100%; box-shadow: none;">
             <h3>Edit Question (ID: <?php echo $edit_q['id']; ?>)</h3>
-            <form method="POST">
+            <form method="POST" style="display: grid; gap: 1rem;">
                 <input type="hidden" name="edit_id" value="<?php echo $edit_q['id']; ?>">
-                <textarea name="question" placeholder="Question" required rows="3"><?php echo htmlspecialchars($edit_q['question']); ?></textarea>
-                <input type="text" name="a" placeholder="Option A" value="<?php echo htmlspecialchars($edit_q['option_a']); ?>" required>
-                <input type="text" name="b" placeholder="Option B" value="<?php echo htmlspecialchars($edit_q['option_b']); ?>" required>
-                <input type="text" name="c" placeholder="Option C" value="<?php echo htmlspecialchars($edit_q['option_c']); ?>" required>
-                <input type="text" name="d" placeholder="Option D" value="<?php echo htmlspecialchars($edit_q['option_d']); ?>" required>
-                <label>Correct Answer:</label>
-                <select name="correct">
-                    <?php foreach (['A','B','C','D'] as $opt): ?>
-                        <option value="<?php echo $opt; ?>" <?php echo $edit_q['correct_answer'] === $opt ? 'selected' : ''; ?>><?php echo $opt; ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <input type="text" name="category" placeholder="Category" value="<?php echo htmlspecialchars($edit_q['category']); ?>">
-                <button type="submit" class="btn">Update</button>
-                <a href="view_questions.php" class="btn btn-danger">Cancel</a>
+                
+                <div class="form-group">
+                    <label>Question</label>
+                    <textarea name="question" required rows="3" class="form-control"><?php echo htmlspecialchars($edit_q['question']); ?></textarea>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="form-group">
+                        <label>Option A</label>
+                        <input type="text" name="a" value="<?php echo htmlspecialchars($edit_q['option_a']); ?>" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Option B</label>
+                        <input type="text" name="b" value="<?php echo htmlspecialchars($edit_q['option_b']); ?>" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Option C</label>
+                        <input type="text" name="c" value="<?php echo htmlspecialchars($edit_q['option_c']); ?>" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Option D</label>
+                        <input type="text" name="d" value="<?php echo htmlspecialchars($edit_q['option_d']); ?>" required class="form-control">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Correct Answer</label>
+                        <select name="correct" class="form-control">
+                            <?php foreach (['A','B','C','D'] as $opt): ?>
+                                <option value="<?php echo $opt; ?>" <?php echo $edit_q['correct_answer'] === $opt ? 'selected' : ''; ?>><?php echo $opt; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" name="category" value="<?php echo htmlspecialchars($edit_q['category']); ?>" class="form-control">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="submit" class="btn">Update Question</button>
+                    <a href="view_questions.php" class="btn btn-danger" style="background: var(--text-light);">Cancel</a>
+                </div>
             </form>
         </div>
     <?php endif; ?>
 
     <!-- ===== QUESTIONS TABLE ===== -->
-    <div class="card">
-        <h3>Questions List</h3>
-        <table style="width: 100%; border-collapse: collapse;">
+    <div class="table-container">
+        <table>
             <thead>
-                <tr style="background: #f3f4f6;">
-                    <th style="padding: 0.75rem; border: 1px solid #d1d5db;">ID</th>
-                    <th style="padding: 0.75rem; border: 1px solid #d1d5db;">Question</th>
-                    <th style="padding: 0.75rem; border: 1px solid #d1d5db;">Category</th>
-                    <th style="padding: 0.75rem; border: 1px solid #d1d5db;">Correct</th>
-                    <th style="padding: 0.75rem; text-align:center; border: 1px solid #d1d5db;">Actions</th>
+                <tr>
+                    <th>ID</th>
+                    <th style="width: 40%;">Question</th>
+                    <th>Category</th>
+                    <th>Correct</th>
+                    <th style="text-align: center;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if ($questions): ?>
                     <?php foreach ($questions as $q): ?>
-                        <tr style="border: 1px solid #d1d5db;">
-                            <td style="padding: 0.75rem;"><?php echo $q['id']; ?></td>
-                            <td style="padding: 0.75rem;"><?php echo htmlspecialchars(substr($q['question'], 0, 80)) . (strlen($q['question']) > 80 ? '...' : ''); ?></td>
-                            <td style="padding: 0.75rem;"><?php echo htmlspecialchars($q['category']); ?></td>
-                            <td style="padding: 0.75rem;"><?php echo $q['correct_answer']; ?></td>
-                            <td style="padding: 0.75rem; text-align: center;">
-                                <a href="?edit=<?php echo $q['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>" class="btn" style="padding: 0.4rem;">Edit</a>
-                                <button onclick="showConfirmModal('Delete Question', 'Delete this question?', () => window.location.href = '?delete=<?php echo $q['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>');" class="btn btn-danger" style="padding: 0.4rem; border: none; background: #ef4444; color: white; cursor: pointer;">Delete</button>
+                        <tr>
+                            <td><?php echo $q['id']; ?></td>
+                            <td><?php echo htmlspecialchars(substr($q['question'], 0, 80)) . (strlen($q['question']) > 80 ? '...' : ''); ?></td>
+                            <td><span style="background: #e0e7ff; color: #4338ca; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.85rem;"><?php echo htmlspecialchars($q['category']); ?></span></td>
+                            <td style="font-weight: bold;"><?php echo $q['correct_answer']; ?></td>
+                            <td style="text-align: center;">
+                                <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                    <a href="?edit=<?php echo $q['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--text-light);">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button onclick="showConfirmModal('Delete Question', 'Delete this question?', () => window.location.href = '?delete=<?php echo $q['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>');" class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="5" style="text-align:center; padding:1rem;">No questions found.</td></tr>
+                    <tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-light);">No questions found.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>

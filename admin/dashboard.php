@@ -14,16 +14,17 @@ $total_tests = $results['total'];
 $avg_score = round($results['avg_score'] ?? 0, 2);
 ?>
 <?php include '../includes/header.php'; ?>
-<!-- Add Font Awesome for icons (add to header.php if not: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> -->
 
 <header class="admin-header">
     <div class="header-content">
         <div class="header-left">
-            <i class="fas fa-user-shield"></i>
-            <h1>Admin Panel</h1>
+            <h1>
+                <i class="fas fa-layer-group"></i>
+                Admin Panel
+            </h1>
         </div>
         <div class="header-right">
-            <a href="../logout.php" class="btn btn-danger" style="margin-left: auto;">
+            <a href="../logout.php" class="btn btn-danger">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </a>
         </div>
@@ -33,54 +34,52 @@ $avg_score = round($results['avg_score'] ?? 0, 2);
 <main class="admin-main">
     <div class="container">
         <section class="stats-section">
-            <h2>Dashboard Overview</h2>
             <div class="stats-grid">
                 <div class="stat-card">
-                    <i class="fas fa-question-circle stat-icon questions"></i>
-                    <h3>Total Questions</h3>
+                    <i class="fas fa-question-circle stat-icon"></i>
                     <p class="stat-value"><?php echo $total_questions; ?></p>
+                    <h3>Total Questions</h3>
                 </div>
-                <div class="stat-card clickable" id="subjectsCard">
-                    <i class="fas fa-book stat-icon subjects"></i>
-                    <h3>Total Subjects</h3>
+                <div class="stat-card clickable" id="subjectsCard" style="cursor: pointer;">
+                    <i class="fas fa-book stat-icon"></i>
                     <p class="stat-value"><?php echo $total_categories; ?></p>
-                    <i class="fas fa-external-link-alt click-icon" style="font-size: 0.8rem; opacity: 0.7; margin-top: 0.5rem;"></i>
+                    <h3>Subjects <i class="fas fa-chevron-right" style="font-size: 0.8rem; margin-left: 0.3rem; opacity: 0.5;"></i></h3>
                 </div>
                 <div class="stat-card">
-                    <i class="fas fa-clipboard-list stat-icon tests"></i>
-                    <h3>Total Tests Taken</h3>
+                    <i class="fas fa-clipboard-list stat-icon"></i>
                     <p class="stat-value"><?php echo $total_tests; ?></p>
+                    <h3>Tests Taken</h3>
                 </div>
                 <div class="stat-card">
-                    <i class="fas fa-chart-line stat-icon score"></i>
-                    <h3>Average Score</h3>
+                    <i class="fas fa-chart-line stat-icon"></i>
                     <p class="stat-value"><?php echo $avg_score; ?>%</p>
+                    <h3>Avg Score</h3>
                 </div>
             </div>
         </section>
 
         <section class="actions-section">
-            <h2>Quick Actions</h2>
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Quick Actions</h2>
             <div class="actions-grid">
                 <a href="add_question.php" class="action-btn">
-                    <i class="fas fa-plus"></i>
-                    <span>Add New Question</span>
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Add Question</span>
                 </a>
                 <a href="upload_excel.php" class="action-btn">
-                    <i class="fas fa-file-excel"></i>
+                    <i class="fas fa-file-csv"></i>
                     <span>Upload Excel</span>
                 </a>
                 <a href="view_questions.php" class="action-btn">
-                    <i class="fas fa-list"></i>
-                    <span>Manage Questions</span>
+                    <i class="fas fa-edit"></i>
+                    <span>Manage Q's</span>
                 </a>
                 <a href="view_results.php" class="action-btn">
                     <i class="fas fa-chart-bar"></i>
-                    <span>View Results</span>
+                    <span>Results</span>
                 </a>
                 <a href="manage_admins.php" class="action-btn">
-                    <i class="fas fa-users-cog"></i>
-                    <span>Manage Admins</span>
+                    <i class="fas fa-user-cog"></i>
+                    <span>Admins</span>
                 </a>
             </div>
         </section>
@@ -91,8 +90,8 @@ $avg_score = round($results['avg_score'] ?? 0, 2);
 <div id="subjectsModal" class="modal" style="display: none;">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>Subjects Overview</h2>
-            <span class="close">&times;</span>
+            <h3>Subjects Overview</h3>
+            <span class="close" onclick="closeModal()">&times;</span>
         </div>
         <div class="modal-body">
             <div id="subjectsList">Loading subjects...</div>
@@ -102,6 +101,7 @@ $avg_score = round($results['avg_score'] ?? 0, 2);
         </div>
     </div>
 </div>
+
 <?php 
 include '../includes/footer.php'; 
 ?>
@@ -117,12 +117,8 @@ include '../includes/footer.php';
         if (subjectsCard) {
             subjectsCard.addEventListener('click', loadSubjectsModal);
         }
-
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => closeModal());
-        }
-
-        // Close on outside click
+        
+        // Close on outside click is handled by CSS/JS combination usually, but ensuring inline script works
         window.addEventListener('click', (e) => {
             if (e.target === modal) {
                 closeModal();
@@ -144,9 +140,12 @@ include '../includes/footer.php';
             if (subjects.length === 0) {
                 list.innerHTML = '<p>No subjects available.</p>';
             } else {
-                let html = '<ul class="subjects-ul">';
+                let html = '<ul class="subjects-ul" style="list-style: none; padding: 0;">';
                 subjects.forEach(subject => {
-                    html += `<li><strong>${subject.category}</strong> <span class="subject-count">(${subject.count} questions)</span></li>`;
+                    html += `<li style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6;">
+                                <strong>${subject.category}</strong> 
+                                <span class="subject-count" style="color: #6b7280; font-size: 0.9rem;">(${subject.count} Qs)</span>
+                             </li>`;
                 });
                 html += '</ul>';
                 list.innerHTML = html;

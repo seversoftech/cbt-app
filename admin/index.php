@@ -37,52 +37,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include '../includes/header.php';
 ?>
 
-<div class="card" style="max-width: 400px; margin: 2rem auto; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px;">
-    <h2 style="text-align:center; margin-bottom: 1.5rem;">Admin Login</h2>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <i class="fas fa-user-shield"></i>
+                <h2>Admin Login</h2>
+                <p>Secure access to the dashboard</p>
+            </div>
 
-    <?php if (!empty($error)): ?>
-        <p style="color: #dc2626; background:#fee2e2; border:1px solid #fecaca; padding:0.75rem; border-radius:5px; text-align:center;">
-            <?php echo htmlspecialchars($error); ?>
-        </p>
-    <?php endif; ?>
+            <?php if (!empty($error)): ?>
+                <div style="background-color: #fee2e2; border-left: 4px solid #ef4444; color: #b91c1c; padding: 1rem; margin-bottom: 2rem; border-radius: 0.5rem; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span><?php echo htmlspecialchars($error); ?></span>
+                </div>
+            <?php endif; ?>
 
-    <form method="POST" style="display: flex; flex-direction: column; gap: 1rem;">
-        <div>
-            <label for="username" style="font-weight:600;">Username</label>
-            <input type="text" id="username" name="username" placeholder="Enter admin username" required
-                   style="width: 100%; padding: 0.5rem; border:1px solid #d1d5db; border-radius:4px;">
-        </div>
+            <form method="POST">
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="username">Username</label>
+                    <div style="position: relative;">
+                         <input type="text" id="username" name="username" placeholder="Enter admin username" required
+                           style="padding-left: 3rem;">
+                         <i class="fas fa-user" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-light);"></i>
+                    </div>
+                </div>
 
-        <div>
-            <label for="password" style="font-weight:600;">Password</label>
-            <div style="position: relative;">
-                <input type="password" id="password" name="password" placeholder="Enter password" required
-                       style="width: 100%; padding: 0.5rem; border:1px solid #d1d5db; border-radius:4px;">
-                <span id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6b7280;">🙈</span>
+                <div style="margin-bottom: 2rem;">
+                    <label for="password">Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" name="password" placeholder="Enter password" required
+                               style="padding-left: 3rem;">
+                        <i class="fas fa-lock" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-light);"></i>
+                        <span id="togglePassword" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-light);">
+                            <i class="far fa-eye"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" style="width: 100%; justify-content: center; padding: 1rem; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Sign In <i class="fas fa-arrow-right" style="margin-left: 0.5rem;"></i>
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 2rem; font-size: 0.9rem; color: var(--text-light);">
+                <p>Copyright © <?php echo date('Y'); ?> Seversoft CBT</p>
             </div>
         </div>
+    </div>
 
-        <button type="submit" class="btn" style="padding: 0.75rem; font-size: 1rem;">Login</button>
-    </form>
+    <?php include '../includes/footer.php'; ?>
 
-    <p style="text-align:center; color:#6b7280; margin-top:1rem; font-size:0.9rem;">
-        © <?php echo date('Y'); ?> Seversoft CBT Admin Panel 
-    </p>
-</div>
-<?php 
-include '../includes/footer.php'; 
-?>
-<script>
-// Toggle show/hide password
-const togglePassword = document.getElementById('togglePassword');
-const passwordInput = document.getElementById('password');
+    <script>
+        // Toggle show/hide password
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const icon = togglePassword.querySelector('i');
 
-togglePassword.addEventListener('click', () => {
-    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-    passwordInput.setAttribute('type', type);
-    togglePassword.textContent = type === 'password' ? '🙈' : '👁️';
-});
-</script>
-
-<script src="../assets/js/script.js"></script>
-</body></html>
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            // Toggle icon class
+            if (type === 'password') {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        });
+    </script>

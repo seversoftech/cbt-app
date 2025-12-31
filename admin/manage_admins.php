@@ -75,170 +75,192 @@ $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <?php include '../includes/header.php'; ?>
 
-<!-- Bootstrap 5 + FontAwesome -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-
-
-<style>
-
-
-</style>
-
-<div class="container py-4">
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 class="card-title mb-0">
-                    <i class="fa-solid fa-user-shield me-2 text-primary"></i>Manage Admins
-                </h3>
-                <a href="dashboard.php" class="btn-modern btn-modern-secondary">
-                    <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
-                </a>
+<!-- Content Wrapper -->
+<div class="container" style="padding-top: 2rem; padding-bottom: 2rem;">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="background: var(--primary-light); color: var(--primary); padding: 0.75rem; border-radius: 50%; font-size: 1.5rem;">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h2 style="margin: 0;">Manage Admins</h2>
             </div>
+            <a href="dashboard.php" class="btn" style="background: var(--text-light); box-shadow: none;">
+                <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
 
-            <!-- Alerts -->
-            <?php if ($success): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <?= $success ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <!-- Alerts -->
+        <?php if ($success): ?>
+            <div style="background-color: #ecfdf5; border-left: 4px solid var(--secondary); color: #065f46; padding: 1rem; margin-bottom: 2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-check-circle"></i>
+                    <span><?= $success ?></span>
                 </div>
-            <?php elseif ($error): ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <?= htmlspecialchars($error) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <button onclick="this.parentElement.style.display='none'" style="background:none; border:none; cursor:pointer; color:inherit; font-size:1.2rem;">&times;</button>
+            </div>
+        <?php elseif ($error): ?>
+            <div style="background-color: #fee2e2; border-left: 4px solid var(--danger); color: #b91c1c; padding: 1rem; margin-bottom: 2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span><?= htmlspecialchars($error) ?></span>
                 </div>
-            <?php endif; ?>
+                <button onclick="this.parentElement.style.display='none'" style="background:none; border:none; cursor:pointer; color:inherit; font-size:1.2rem;">&times;</button>
+            </div>
+        <?php endif; ?>
 
-            <!-- Add Admin Button -->
-            <button class="btn-modern btn-modern-primary mb-3" data-bs-toggle="modal" data-bs-target="#addAdminModal">
-                <i class="fa-solid fa-user-plus"></i> Add New Admin
-            </button>
+        <!-- Add Admin Button -->
+        <button class="btn" onclick="openModal('addAdminModal')">
+            <i class="fa-solid fa-user-plus"></i> Add New Admin
+        </button>
 
-            <!-- Admins Table -->
-            <div class="table-responsive">
-                <table class="table table-striped align-middle text-center">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Username</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($admins): ?>
-                            <?php foreach ($admins as $a): ?>
-                                <tr>
-                                    <td data-label="ID"><?= $a['id'] ?></td>
-                                    <td data-label="Username"><?= htmlspecialchars($a['username']) ?></td>
-                                    <td data-label="Created"><?= htmlspecialchars($a['created_at']) ?></td>
-                                    <td data-label="Actions">
-                                        <div class="btn-group-custom">
-                                            <?php if ($a['id'] != ($_SESSION['admin_id'] ?? 1)): ?>
-                                                <button class="btn-modern btn-modern-warning btn-modern-sm" data-bs-toggle="modal"
-                                                    data-bs-target="#editModal" data-id="<?= $a['id'] ?>" data-user="<?= htmlspecialchars($a['username']) ?>">
-                                                    <i class="fa-solid fa-key"></i> Edit
-                                                </button>
-                                                <a href="?delete=<?= $a['id'] ?>" class="btn-modern btn-modern-danger btn-modern-sm"
-                                                   onclick="return confirm('Delete this admin? This cannot be undone.');">
-                                                    <i class="fa-solid fa-trash"></i> Delete
-                                                </a>
-                                            <?php else: ?>
-                                                <span class="badge bg-success">You</span>
-                                            <?php endif; ?>
+        <!-- Admins Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th width="10%">ID</th>
+                        <th width="35%">Username</th>
+                        <th width="35%">Created</th>
+                        <th width="20%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($admins): ?>
+                        <?php foreach ($admins as $a): ?>
+                            <tr>
+                                <td>#<?= $a['id'] ?></td>
+                                <td style="font-weight: 600; color: var(--dark);"><?= htmlspecialchars($a['username']) ?></td>
+                                <td style="color: var(--text-light);"><?= htmlspecialchars($a['created_at']) ?></td>
+                                <td>
+                                    <?php if ($a['id'] != ($_SESSION['admin_id'] ?? 1)): ?>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: var(--warning); box-shadow: none;"
+                                                onclick="openEditModal(<?= $a['id'] ?>, '<?= htmlspecialchars($a['username']) ?>')">
+                                                <i class="fa-solid fa-key"></i> Edit
+                                            </button>
+                                            <a href="?delete=<?= $a['id'] ?>" class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.85rem;"
+                                               onclick="return confirm('Delete this admin? This cannot be undone.');">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </a>
                                         </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr><td colspan="4" class="text-muted">No admins found.</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+                                    <?php else: ?>
+                                        <span style="display: inline-block; padding: 0.25rem 0.75rem; background: var(--secondary); color: white; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">You</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="4" style="text-align:center; padding: 2rem; color: var(--text-light);">No admins found.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
 <!-- Add Admin Modal -->
-<div class="modal fade" id="addAdminModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-        <div class="modal-content border-0 shadow-sm">
-            <form method="POST">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title"><i class="fa-solid fa-user-plus me-2 text-primary"></i>Add New Admin</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div id="addAdminModal" class="modal">
+    <div class="modal-content">
+        <form method="POST">
+            <div class="modal-header">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; color: var(--primary);">
+                    <i class="fa-solid fa-user-plus"></i> Add New Admin
+                </h3>
+                <span class="close" onclick="closeModal('addAdminModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+                <input type="hidden" name="action" value="add_admin">
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="new_username"><i class="fa-solid fa-user me-1"></i> Username</label>
+                    <input type="text" id="new_username" name="username" required placeholder="Enter username">
                 </div>
-                <div class="modal-body">
-                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-                    <input type="hidden" name="action" value="add_admin">
-                    <div class="mb-3">
-                        <label class="form-label"><i class="fa-solid fa-user me-1"></i>Username</label>
-                        <input type="text" class="form-control" name="username" required placeholder="Enter username">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label"><i class="fa-solid fa-lock me-1"></i>Password</label>
-                        <input type="password" class="form-control" name="password" required placeholder="Enter password">
-                    </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label for="new_password"><i class="fa-solid fa-lock me-1"></i> Password</label>
+                    <input type="password" id="new_password" name="password" required placeholder="Enter password">
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">
-                        <i class="fa-solid fa-times"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn-modern btn-modern-primary">
-                        <i class="fa-solid fa-check"></i> Add Admin
-                    </button>
-                </div>
-            </form>
-        </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background: var(--text-light); box-shadow: none;" onclick="closeModal('addAdminModal')">Cancel</button>
+                <button type="submit" class="btn">Add Admin</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <!-- Edit Password Modal -->
-<div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-        <div class="modal-content border-0 shadow-sm">
-            <form method="POST" id="editForm">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title"><i class="fa-solid fa-key me-2 text-warning"></i>Edit Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <form method="POST">
+            <div class="modal-header">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; color: var(--warning);">
+                    <i class="fa-solid fa-key"></i> Edit Password
+                </h3>
+                <span class="close" onclick="closeModal('editModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+                <input type="hidden" name="action" value="edit_password">
+                <input type="hidden" name="edit_id" id="editId">
+                
+                <div style="margin-bottom: 1rem;">
+                    <label for="edit_password_input">
+                        <i class="fa-solid fa-user me-1"></i> New Password for <span id="editUser" style="color: var(--primary); font-weight: 700;"></span>
+                    </label>
+                    <input type="password" id="edit_password_input" name="new_password" required placeholder="Enter new password">
                 </div>
-                <div class="modal-body">
-                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-                    <input type="hidden" name="action" value="edit_password">
-                    <input type="hidden" name="edit_id" id="editId">
-                    <div class="mb-3">
-                        <label class="form-label"><i class="fa-solid fa-user me-1"></i>New Password for <span id="editUser" class="fw-bold"></span></label>
-                        <input type="password" name="new_password" class="form-control" required placeholder="Enter new password">
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn-modern btn-modern-secondary" data-bs-dismiss="modal">
-                        <i class="fa-solid fa-times"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn-modern btn-modern-warning">
-                        <i class="fa-solid fa-save"></i> Update Password
-                    </button>
-                </div>
-            </form>
-        </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background: var(--text-light); box-shadow: none;" onclick="closeModal('editModal')">Cancel</button>
+                <button type="submit" class="btn" style="background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);">Update Password</button>
+            </div>
+        </form>
     </div>
-</div><?php 
+</div>
+
+<?php 
 include '../includes/footer.php'; 
 ?>
 
 <script>
-const editModal = document.getElementById('editModal');
-editModal.addEventListener('show.bs.modal', event => {
-    const button = event.relatedTarget;
-    const id = button.getAttribute('data-id');
-    const user = button.getAttribute('data-user');
+// Modal Functions
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+        modal.querySelector('.modal-content').style.transform = 'scale(1)';
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.opacity = '0';
+        modal.querySelector('.modal-content').style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+}
+
+function openEditModal(id, username) {
     document.getElementById('editId').value = id;
-    document.getElementById('editUser').textContent = user;
-});
+    document.getElementById('editUser').textContent = username;
+    openModal('editModal');
+}
+
+// Close modal if clicked outside
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        closeModal(event.target.id);
+    }
+}
 </script>
 
+<script src="../assets/js/script.js"></script>
 </body>
 </html>
