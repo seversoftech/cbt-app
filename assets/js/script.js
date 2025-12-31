@@ -41,31 +41,7 @@ function updateTimerDisplay() {
     timerEl.innerHTML = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-async function submitTest() {
-    const answers = {};
-    document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
-        const nameMatch = radio.name.match(/q(\d+)/);
-        if (nameMatch) answers[nameMatch[1]] = radio.value;
-    });
-
-    let score = 0;
-    questions.forEach((q, index) => {
-        if (answers[index] === q.correct_answer) score++;
-    });
-
-    const formData = new FormData();
-    formData.append('score', score);
-    formData.append('total', questions.length);
-    formData.append('category', selectedCategory);
-
-    try {
-        const response = await fetch('../student/results.php', { method: 'POST', body: formData });
-        const data = await response.json();
-        window.location.href = `../student/results.php?score=${data.score}&total=${data.total}&category=${encodeURIComponent(selectedCategory)}`;
-    } catch (error) {
-        console.error('Submit error:', error);
-    }
-}
+// submission handled in cbt-test.js
 
 document.addEventListener('DOMContentLoaded', () => {
 });

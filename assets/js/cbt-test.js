@@ -1,10 +1,11 @@
 let questions = [];
 let currentQuestionIndex = 0;
 let selectedCategory = '';
+let studentName = '';
 
-let totalTestTime = 1800; 
+let totalTestTime = 1800;
 
-let confirmationCallback = null; 
+let confirmationCallback = null;
 
 // Modal functions
 function showModal(message, type = 'info', title = 'Notification', isConfirm = false, onConfirm = null) {
@@ -47,7 +48,7 @@ function showModal(message, type = 'info', title = 'Notification', isConfirm = f
     modal.addEventListener('click', (e) => {
         if (e.target === modal) e.stopPropagation();
     });
-    
+
 }
 
 function closeModal(confirmed = false) {
@@ -80,15 +81,10 @@ function closeInfoModal() {
 }
 
 // Close modals on outside click
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const notificationModal = document.getElementById('notificationModal');
     notificationModal.addEventListener('click', (e) => {
         if (e.target === notificationModal) closeModal();
-    });
-
-    const infoModal = document.getElementById('infoModal');
-    infoModal.addEventListener('click', (e) => {
-        if (e.target === infoModal) closeInfoModal();
     });
 });
 
@@ -159,7 +155,7 @@ async function loadCategories() {
         if (select.options.length <= 1) {
             select.innerHTML = '<option value="">No subjects available</option>';
         }
-        document.getElementById('categoryScreen').style.display = 'block'; 
+        document.getElementById('categoryScreen').style.display = 'block';
         document.getElementById('categoryList').style.display = 'block';
         document.getElementById('resumePrompt').style.display = 'none';
         document.getElementById('startBtn').addEventListener('click', startNewTest);
@@ -174,15 +170,22 @@ async function loadCategories() {
 }
 
 async function startNewTest() {
+    const studentId = document.getElementById('studentId').value.trim();
+    if (!studentId) {
+        showModal('Please enter your Full Name / Surname before starting.', 'warning');
+        return;
+    }
+
     const category = document.getElementById('categorySelect').value;
     if (!category) {
         showModal('Please select a subject.', 'warning');
         return;
     }
     selectedCategory = category;
+    studentName = studentId;
     try {
-        // Fetch questions for selected category
-        const response = await fetch(`../config/get_questions.php?category=${encodeURIComponent(category)}&restart=1`);
+        // Fetch questions for selected category and pass student_id
+        const response = await fetch(`../config/get_questions.php?category=${encodeURIComponent(category)}&restart=1&student_id=${encodeURIComponent(studentId)}`);
         if (!response.ok) throw new Error('Failed to start test: ' + response.status);
         const text = await response.text();
         if (!text.trim()) throw new Error('Empty response from server');
@@ -205,6 +208,7 @@ async function startNewTest() {
 
 async function resumeTest(state) {
     selectedCategory = state.category || 'General';
+    studentName = state.student_id || 'Anonymous';
     questions = state.questions;
     currentQuestionIndex = state.current_index;
     testStartTime = state.start_time;
@@ -221,42 +225,67 @@ async function resumeTest(state) {
 
 function displayTestScreen() {
     let html = `
-        <div style="text-align: center; margin-bottom: 1rem; font-weight: 500; color: #6366f1;">
-            Subject: ${selectedCategory}
-        </div>
-        <form id="testForm">
-            <div class="progress"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
-            <div id="timer" class="timer">30:00</div>
+        <div class="test-inner">
+            <div style="text-align: center; margin-bottom: 2rem; font-weight: 700; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.9rem;">
+                <i class="fas fa-book-open"></i> ${selectedCategory}
+            </div>
+            <form id="testForm">
+                <div id="timer" class="timer">30:00</div>
+                <div class="progress"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
     `;
+
     questions.forEach((q, index) => {
-        html += `<div class="question" style="display: ${index === currentQuestionIndex ? 'block' : 'none'};"><h3>${index+1}. ${q.question}</h3>`;
+        html += `
+            <div class="question" style="display: ${index === currentQuestionIndex ? 'block' : 'none'};">
+                <h3 id="qtext_${index}">${index + 1}. ${q.question}</h3>
+                <div class="options-group">
+        `;
+
         ['a', 'b', 'c', 'd'].forEach(opt => {
-            const label = String.fromCharCode(65 + ['a', 'b', 'c', 'd'].indexOf(opt));
+            const labelChar = String.fromCharCode(65 + ['a', 'b', 'c', 'd'].indexOf(opt));
             const optionKey = `option_${opt}`;
-            html += `<label><input type="radio" name="q${index}" value="${opt}"> ${label}. ${q[optionKey]} </label><br>`;
+            html += `
+                <label class="option-label">
+                    <input type="radio" name="q${index}" value="${opt}">
+                    <span class="option-marker">${labelChar}</span>
+                    <span class="option-text">${q[optionKey]}</span>
+                </label>
+            `;
         });
-        html += '</div>';
+
+        html += `
+                </div>
+            </div>
+        `;
     });
+
     html += `
-        <div class="navigation text-center mt-4">
-            <div class="mb-3">
-                <span id="questionIndicator" class="d-block d-sm-inline fw-semibold text-muted">Question <span id="currentQ">1</span> of <span id="totalQ">${questions.length}</span></span>
+            <div class="navigation">
+                <div style="margin-bottom: 2rem; color: rgba(255,255,255,0.5); font-weight: 600;">
+                    Question <span id="currentQ">1</span> of <span id="totalQ">${questions.length}</span>
+                </div>
+                <div class="d-flex justify-content-center gap-3 w-100">
+                    <button type="button" id="prevBtn" class="btn btn-outline-secondary" onclick="prevQuestion()" style="display: none; flex: 1; max-width: 200px;">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </button>
+                    <button type="button" id="nextBtn" class="btn btn-primary" onclick="nextQuestion()" style="flex: 1; max-width: 200px;">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button type="button" id="submitBtn" class="btn btn-success" onclick="submitTest()" style="display: none; flex: 1; max-width: 200px;">
+                        Submit Examination <i class="fas fa-check-circle"></i>
+                    </button>
+                </div>
+                <button type="button" id="exitBtn" class="btn btn-danger" onclick="exitToCategories()" style="margin-top: 3rem; background: transparent; border: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; padding: 0.5rem 1rem;">
+                    Exit Test
+                </button>
             </div>
-            <div class="d-flex justify-content-center flex-wrap gap-2 mb-3">
-                <button type="button" id="prevBtn" class="btn btn-outline-secondary" onclick="prevQuestion()" style="display: none; min-width: 120px; flex: 1 1 45%;" disabled>Previous</button>
-                <button type="button" id="nextBtn" class="btn btn-primary" onclick="nextQuestion()" style="min-width: 120px; flex: 1 1 45%;">Next</button>
-                <button type="button" id="submitBtn" class="btn btn-success" onclick="submitTest()" style="display: none; min-width: 120px; flex: 1 1 45%;">Submit</button>
-            </div>
-            <p>
-            <div class="w-100">
-                <button type="button" id="exitBtn" class="btn btn-warning w-100" onclick="exitToCategories()">Change Subject</button>
-            </div>
+            </form>
         </div>
-        </form>`;
+    `;
     document.getElementById('testScreen').innerHTML = html;
     document.getElementById('startScreen').style.display = 'none';
     document.getElementById('testScreen').style.display = 'block';
-    startTimer(testStartTime, totalTestTime); 
+    startTimer(testStartTime, totalTestTime);
     updateProgress();
     attachRadioListeners();
     updateNavigation();
@@ -278,7 +307,8 @@ async function saveState() {
             body: JSON.stringify({
                 answers,
                 current_index: currentQuestionIndex,
-                category: selectedCategory
+                category: selectedCategory,
+                student_id: studentName
             })
         });
         if (!response.ok) throw new Error('Save failed: ' + response.status);
@@ -479,6 +509,9 @@ async function performSubmit(answers) {
             formData.append(`q${index}`, ans);
         });
         formData.append('subject', selectedCategory); // Add subject to form data
+        formData.append('student_id', studentName); // Add student_id to form data
+        console.log('Submitting test for student:', studentName);
+
 
         const response = await fetch('results.php', {
             method: 'POST',
@@ -504,7 +537,7 @@ async function performSubmit(answers) {
         currentQuestionIndex = 0;
 
         // Redirect to results with scored params
-        window.location.href = `results.php?score=${data.score}&total=${data.total}`;
+        window.location.href = `results.php?score=${data.score}&total=${data.total}&subject=${encodeURIComponent(selectedCategory)}`;
     } catch (error) {
         console.error('Submit error:', error);
         showModal('Error submitting test: ' + error.message, 'error');

@@ -18,8 +18,11 @@ if (isset($input['current_index'])) {
 if (isset($input['category'])) {
     $_SESSION['test_category'] = $input['category'];
 }
+if (isset($input['student_id'])) {
+    $_SESSION['student_id'] = $input['student_id'];
+}
 if (isset($input['clear']) && $input['clear']) {
-    unset($_SESSION['test_start_time'], $_SESSION['test_questions'], $_SESSION['test_answers'], $_SESSION['current_index'], $_SESSION['test_category']);
+    unset($_SESSION['test_start_time'], $_SESSION['test_questions'], $_SESSION['test_answers'], $_SESSION['current_index'], $_SESSION['test_category'], $_SESSION['student_id']);
     echo json_encode(['success' => true, 'cleared' => true]);
     exit;
 }

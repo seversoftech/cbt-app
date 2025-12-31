@@ -24,6 +24,7 @@ if (isset($_SESSION['test_start_time']) && isset($_SESSION['test_questions']) &&
         'current_index' => $_SESSION['current_index'],
         'start_time' => $_SESSION['test_start_time'],
         'category' => $_SESSION['test_category'],
+        'student_id' => $_SESSION['student_id'] ?? 'Anonymous',
         'total_time' => 1800 // 30min in seconds
     ]);
 } else {

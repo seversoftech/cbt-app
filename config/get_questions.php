@@ -5,8 +5,12 @@ require 'db.php';
 
 // Force clear on restart param
 if (isset($_GET['restart'])) {
-    unset($_SESSION['test_start_time'], $_SESSION['test_questions'], $_SESSION['test_answers'], $_SESSION['current_index'], $_SESSION['test_category']);
-    $_SESSION = array_diff_key($_SESSION, array_flip(['test_start_time', 'test_questions', 'test_answers', 'current_index', 'test_category']));
+    unset($_SESSION['test_start_time'], $_SESSION['test_questions'], $_SESSION['test_answers'], $_SESSION['current_index'], $_SESSION['test_category'], $_SESSION['student_id']);
+    $_SESSION = array_diff_key($_SESSION, array_flip(['test_start_time', 'test_questions', 'test_answers', 'current_index', 'test_category', 'student_id']));
+    
+    if (isset($_GET['student_id'])) {
+        $_SESSION['student_id'] = trim($_GET['student_id']);
+    }
 }
 
 // Get category from query

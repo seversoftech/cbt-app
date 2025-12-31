@@ -26,7 +26,7 @@ if ($_POST) {
         $final_category = !empty($new_category) ? $new_category : $category;
 
         try {
-            $stmt = $pdo->prepare("INSERT INTO questions (question, option_a, option_b, option_c, option_d, correct_answer, category) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO questions (question, option_a, option_b, option_c, option_d, correct_answer, category) VALUES (?, (?, ?, ?, ?, ?, ?)");
             $stmt->execute([$question, $option_a, $option_b, $option_c, $option_d, $correct, $final_category]);
             $success = 'Question added successfully!';
         } catch (PDOException $e) {
@@ -35,68 +35,131 @@ if ($_POST) {
     }
 }
 ?>
-<?php include '../includes/header.php'; ?>
-<div class="card">
-    <h2>Add Question</h2>
-    <?php if (isset($success)): ?>
-        <div class="success"><?php echo $success; ?></div>
-    <?php endif; ?>
-    <?php if (isset($error)): ?>
-        <div class="error"><?php echo $error; ?></div>
-    <?php endif; ?>
-    <form method="POST" id="questionForm">
-        <textarea name="question" placeholder="Enter the question here..." required rows="3"></textarea>
-        
-   
-        
-        <!-- Options -->
-        <div class="form-group">
-            <label>Answer Options</label>
-            <div class="options-group">
-                <input type="text" name="a" placeholder="Option A" required>
-                <input type="text" name="b" placeholder="Option B" required>
-                <input type="text" name="c" placeholder="Option C" required>
-                <input type="text" name="d" placeholder="Option D" required>
-            </div>
-        </div>
-        
-
-             <!-- Correct Answer Select (before options) -->
-             <div class="form-group">
-            <label for="correct">Correct Answer</label>
-            <select name="correct" id="correct" required>
-                <option value="">Select correct answer</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
-            </select>
-        </div>
-        <!-- Subject (Category) -->
-        <div class="form-group">
-            <label for="category">Subject</label>
-            <select name="category" id="category" onchange="toggleNewCategory()">
-    <option value="" disabled selected>-- Select Subject or Add New --</option>
-    <option value="new">➕ Add New Subject</option>
-    <option value="General">General</option>
-    <?php foreach ($categories as $cat): ?>
-        <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
-    <?php endforeach; ?>
-</select>
-
-            <input type="text" name="new_category" id="newCategory" placeholder="Enter new subject name..." style="display: none; margin-top: 0.5rem;">
-        </div>
-        
-        <!-- Buttons -->
-        <div class="form-buttons">
-            <button type="button" class="btn btn-secondary" onclick="window.location.href='dashboard.php'">Back to Dashboard</button>
-            <button type="submit" class="btn">Add Question</button>
-        </div>
-    </form>
-</div>
-<?php 
-include '../includes/footer.php'; 
+<?php include '../includes/header.php';
+include '../includes/admin_nav.php'; // Unified Admin Navbar
 ?>
+
+<main style="padding-bottom: 4rem;">
+    <div class="container" style="padding-top: 2rem; padding-bottom: 2rem; max-width: 900px;">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid #f3f4f6; padding-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="background: var(--primary-light); color: var(--primary); padding: 0.75rem; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-plus" style="font-size: 1.5rem;"></i>
+                </div>
+                <div>
+                    <h2 style="margin: 0; font-size: 1.75rem;">Add Question</h2>
+                    <p style="margin: 0; color: var(--text-light); font-size: 0.9rem;">Create a new question for the exam bank</p>
+                </div>
+            </div>
+            
+            <a href="dashboard.php" class="btn" style="background: var(--text-light); box-shadow: none;">
+                <i class="fa-solid fa-arrow-left"></i> Cancel
+            </a>
+        </div>
+
+        <?php if (isset($success)): ?>
+             <div style="background-color: #ecfdf5; border-left: 4px solid var(--secondary); color: #065f46; padding: 1rem; margin-bottom: 2rem; border-radius: 0.5rem; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-check-circle"></i>
+                <span><?php echo $success; ?></span>
+            </div>
+        <?php endif; ?>
+        <?php if (isset($error)): ?>
+            <div style="background-color: #fee2e2; border-left: 4px solid var(--danger); color: #b91c1c; padding: 1rem; margin-bottom: 2rem; border-radius: 0.5rem; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span><?php echo $error; ?></span>
+            </div>
+        <?php endif; ?>
+
+        <form method="POST" id="questionForm">
+            <!-- Subject Selection -->
+            <div style="margin-bottom: 2rem; background: #f9fafb; padding: 1.5rem; border-radius: 1rem;">
+                <label for="category" style="display: block; margin-bottom: 0.5rem; font-weight: 700; color: var(--dark);"><i class="fa-solid fa-folder-open me-2"></i>Subject Category</label>
+                <select name="category" id="category" onchange="toggleNewCategory()" style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #d1d5db; font-size: 1rem; background: white;">
+                    <option value="" disabled selected>-- Select Subject --</option>
+                    <option value="General">General</option>
+                    <?php foreach ($categories as $cat): ?>
+                        <option value="<?php echo htmlspecialchars($cat); ?>"><?php echo htmlspecialchars($cat); ?></option>
+                    <?php endforeach; ?>
+                    <option value="new" style="font-weight: bold; color: var(--primary);">➕ Add New Subject...</option>
+                </select>
+
+                <input type="text" name="new_category" id="newCategory" placeholder="Enter name for new subject..." 
+                       style="display: none; margin-top: 1rem; width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 2px solid var(--primary); background: #ffffff;">
+            </div>
+
+            <!-- Question Text -->
+            <div style="margin-bottom: 2rem;">
+                <label for="question" style="display: block; margin-bottom: 0.5rem; font-weight: 700; color: var(--dark);"><i class="fa-solid fa-circle-question me-2"></i>Question Text</label>
+                <textarea name="question" id="question" placeholder="Type your full question here..." required rows="4" 
+                          style="width: 100%; padding: 1rem; border-radius: 1rem; border: 1px solid #d1d5db; font-size: 1.1rem; line-height: 1.6; resize: vertical; transition: all 0.2s;"></textarea>
+            </div>
+            
+            <!-- Options Grid -->
+            <div style="margin-bottom: 2rem;">
+                 <label style="display: block; margin-bottom: 1rem; font-weight: 700; color: var(--dark);"><i class="fa-solid fa-list-ul me-2"></i>Answer Options</label>
+                 
+                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                     <!-- Option A -->
+                     <div class="option-input-group" style="position: relative;">
+                         <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--text-light); background: #f3f4f6; padding: 0.25rem 0.75rem; border-radius: 0.5rem;">A</span>
+                         <input type="text" name="a" placeholder="Option A Answer" required
+                                style="width: 100%; padding: 0.75rem 0.75rem 0.75rem 3.5rem; border-radius: 0.75rem; border: 1px solid #d1d5db;">
+                     </div>
+                     <!-- Option B -->
+                     <div class="option-input-group" style="position: relative;">
+                         <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--text-light); background: #f3f4f6; padding: 0.25rem 0.75rem; border-radius: 0.5rem;">B</span>
+                         <input type="text" name="b" placeholder="Option B Answer" required
+                                style="width: 100%; padding: 0.75rem 0.75rem 0.75rem 3.5rem; border-radius: 0.75rem; border: 1px solid #d1d5db;">
+                     </div>
+                     <!-- Option C -->
+                     <div class="option-input-group" style="position: relative;">
+                         <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--text-light); background: #f3f4f6; padding: 0.25rem 0.75rem; border-radius: 0.5rem;">C</span>
+                         <input type="text" name="c" placeholder="Option C Answer" required
+                                style="width: 100%; padding: 0.75rem 0.75rem 0.75rem 3.5rem; border-radius: 0.75rem; border: 1px solid #d1d5db;">
+                     </div>
+                     <!-- Option D -->
+                     <div class="option-input-group" style="position: relative;">
+                         <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--text-light); background: #f3f4f6; padding: 0.25rem 0.75rem; border-radius: 0.5rem;">D</span>
+                         <input type="text" name="d" placeholder="Option D Answer" required
+                                style="width: 100%; padding: 0.75rem 0.75rem 0.75rem 3.5rem; border-radius: 0.75rem; border: 1px solid #d1d5db;">
+                     </div>
+                 </div>
+            </div>
+
+            <!-- Correct Answer Selection -->
+             <div style="margin-bottom: 2.5rem; background: #ecfdf5; padding: 1.5rem; border-radius: 1rem; border: 1px dashed var(--secondary);">
+                <label for="correct" style="display: block; margin-bottom: 0.5rem; font-weight: 700; color: #065f46;"><i class="fa-solid fa-check-circle me-2"></i>Select Correct Answer</label>
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                        <input type="radio" name="correct" value="A" required onchange="highlightCorrect('a')"> 
+                        <span style="font-weight: 600;">Option A</span>
+                    </label>
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                        <input type="radio" name="correct" value="B" required onchange="highlightCorrect('b')"> 
+                        <span style="font-weight: 600;">Option B</span>
+                    </label>
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                        <input type="radio" name="correct" value="C" required onchange="highlightCorrect('c')"> 
+                        <span style="font-weight: 600;">Option C</span>
+                    </label>
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                        <input type="radio" name="correct" value="D" required onchange="highlightCorrect('d')"> 
+                        <span style="font-weight: 600;">Option D</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="btn" style="width: 100%; padding: 1rem; font-size: 1.2rem; justify-content: center;">
+                <i class="fa-solid fa-save"></i> Save Question
+            </button>
+        </form>
+    </div>
+</div>
+
+<?php include '../includes/footer.php'; ?>
+
 <script src="../assets/js/script.js"></script>
 <script>
 // Toggle new category input
@@ -106,22 +169,38 @@ function toggleNewCategory() {
     if (select.value === 'new') {
         newInput.style.display = 'block';
         newInput.required = true;
+        newInput.focus();
     } else {
         newInput.style.display = 'none';
-    
+        newInput.required = false; // Important: remove required if hidden
         newInput.value = '';
     }
 }
 
-// Optional: Highlight correct option preview (client-side)
-document.getElementById('correct').addEventListener('change', function() {
-    const correct = this.value;
-    const options = document.querySelectorAll('input[name^="a"], input[name^="b"], input[name^="c"], input[name^="d"]');
-    options.forEach(opt => opt.style.borderColor = '#d1d5db');
-    if (correct) {
-        const correctOpt = document.querySelector(`input[name="${correct.toLowerCase()}"]`);
-        if (correctOpt) correctOpt.style.borderColor = '#10b981';
+// Highlight correct option visual feedback
+function highlightCorrect(optionLower) {
+    // Reset all borders
+    const allInputs = document.querySelectorAll('input[name="a"], input[name="b"], input[name="c"], input[name="d"]');
+    allInputs.forEach(input => {
+        input.style.borderColor = '#d1d5db';
+        input.style.borderWidth = '1px';
+        input.style.boxShadow = 'none';
+        input.parentElement.querySelector('span').style.background = '#f3f4f6';
+        input.parentElement.querySelector('span').style.color = 'var(--text-light)';
+    });
+
+    // Highlight selected
+    const selectedInput = document.querySelector(`input[name="${optionLower}"]`);
+    if (selectedInput) {
+        selectedInput.style.borderColor = 'var(--secondary)';
+        selectedInput.style.borderWidth = '2px';
+        selectedInput.style.boxShadow = '0 0 0 4px #ecfdf5';
+        
+        // Highlight the badge too
+        const badge = selectedInput.parentElement.querySelector('span');
+        badge.style.background = 'var(--secondary)';
+        badge.style.color = 'white';
     }
-});
+}
 </script>
 </body></html>

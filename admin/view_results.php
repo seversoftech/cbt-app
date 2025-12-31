@@ -52,78 +52,133 @@ $stmt->execute();
 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<?php include '../includes/header.php'; ?>
-<div class="card">
-    <h2>View Test Results</h2>
-    
-    <div style="margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-        <a href="dashboard.php" class="btn">Back to Dashboard</a>
-        <a href="?export=1" class="btn">Export to CSV</a>
-
-        <!-- Search Form -->
-        <form method="GET" style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem;">
-            <input type="text" name="search" placeholder="Search Student ID, Subject or Date..." 
-                   value="<?php echo htmlspecialchars($search); ?>" 
-                   style="padding: 0.5rem; width: 250px;">
-            <button type="submit" class="btn">Search</button>
-        </form>
-    </div>
-    
-    <!-- Results Table -->
-    <table style="width: 100%; border-collapse: collapse;">
-        <thead>
-            <tr style="background: #f3f4f6;">
-                <th style="padding: 0.75rem; text-align: left; border: 1px solid #d1d5db;">ID</th>
-                <th style="padding: 0.75rem; text-align: left; border: 1px solid #d1d5db;">Student ID</th>
-                <th style="padding: 0.75rem; text-align: left; border: 1px solid #d1d5db;">Subject</th>
-                <th style="padding: 0.75rem; text-align: center; border: 1px solid #d1d5db;">Score</th>
-                <th style="padding: 0.75rem; text-align: center; border: 1px solid #d1d5db;">Total Q</th>
-                <th style="padding: 0.75rem; text-align: center; border: 1px solid #d1d5db;">Percentage</th>
-                <th style="padding: 0.75rem; text-align: center; border: 1px solid #d1d5db;">Completed At</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (!empty($results)): ?>
-                <?php foreach ($results as $r): ?>
-                    <tr style="border: 1px solid #d1d5db;">
-                        <td style="padding: 0.75rem;"><?php echo $r['id']; ?></td>
-                        <td style="padding: 0.75rem;"><?php echo htmlspecialchars($r['student_id']); ?></td>
-                        <td style="padding: 0.75rem;"><?php echo htmlspecialchars($r['subject']); ?></td>
-                        <td style="padding: 0.75rem; text-align: center;"><?php echo $r['score']; ?></td>
-                        <td style="padding: 0.75rem; text-align: center;"><?php echo $r['total_questions']; ?></td>
-                        <td style="padding: 0.75rem; text-align: center;"><?php echo $r['percentage']; ?>%</td>
-                        <td style="padding: 0.75rem; text-align: center;"><?php echo $r['completed_at']; ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <tr><td colspan="7" style="text-align:center; padding:1rem; color:#6b7280;">No results found.</td></tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
-
-    <!-- Pagination Links -->
-    <?php if ($total_pages > 1): ?>
-        <div style="margin-top: 1rem; text-align: center;">
-            <?php if ($page > 1): ?>
-                <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="btn">&laquo; Prev</a>
-            <?php endif; ?>
-
-            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" 
-                   class="btn" 
-                   style="margin: 0 0.25rem; <?php echo ($i == $page) ? 'background:#2563eb;color:#fff;' : ''; ?>">
-                    <?php echo $i; ?>
-                </a>
-            <?php endfor; ?>
-
-            <?php if ($page < $total_pages): ?>
-                <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="btn">Next &raquo;</a>
-            <?php endif; ?>
-        </div>
-    <?php endif; ?>
-</div><?php 
-include '../includes/footer.php'; 
+<?php include '../includes/header.php'; 
+include '../includes/admin_nav.php'; // Unified Admin Navbar
 ?>
 
+<main style="padding-bottom: 4rem;">
+    <div class="container" style="padding-top: 2rem;">
+        <div class="card">
+            <!-- Page Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="background: var(--primary-light); color: var(--primary); padding: 0.75rem; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-chart-bar" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.75rem;">Test Results</h2>
+                        <p style="margin: 0; color: var(--text-light); font-size: 0.9rem;">Monitor student performance and exam metrics</p>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 0.5rem;">
+                    <a href="?export=1" class="btn btn-success">
+                        <i class="fas fa-file-export"></i> Export CSV
+                    </a>
+                    <a href="dashboard.php" class="btn" style="background: var(--text-light); box-shadow: none;">
+                        <i class="fas fa-arrow-left"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Search Toolbar -->
+            <div style="margin-bottom: 2rem;">
+                <form method="GET" style="display: flex; gap: 0.5rem; max-width: 500px;">
+                    <div style="position: relative; flex: 1;">
+                        <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-light);"></i>
+                        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search student, subject or date..." 
+                               style="padding-left: 2.8rem;">
+                    </div>
+                    <button type="submit" class="btn">Search</button>
+                    <?php if ($search): ?>
+                        <a href="view_results.php" class="btn" style="background: var(--text-light); box-shadow: none;" title="Clear search">&times;</a>
+                    <?php endif; ?>
+                </form>
+            </div>
+            
+            <!-- Results Table -->
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="5%">ID</th>
+                                <th width="20%">Student ID</th>
+                                <th width="25%">Subject</th>
+                                <th width="10%" style="text-align: center;">Score</th>
+                                <th width="10%" style="text-align: center;">Total</th>
+                                <th width="15%" style="text-align: center;">Percentage</th>
+                                <th width="15%" style="text-align: center;">Completed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($results)): ?>
+                                <?php foreach ($results as $r): 
+                                    $p = $r['percentage'];
+                                    $pClass = $p >= 75 ? 'text-secondary' : ($p >= 50 ? 'text-warning' : 'text-danger');
+                                ?>
+                                    <tr>
+                                        <td style="color: var(--text-light);">#<?php echo $r['id']; ?></td>
+                                        <td style="font-weight: 600;"><?php echo htmlspecialchars($r['student_id']); ?></td>
+                                        <td><?php echo htmlspecialchars($r['subject']); ?></td>
+                                        <td style="text-align: center; font-weight: 700;"><?php echo $r['score']; ?></td>
+                                        <td style="text-align: center; color: var(--text-light);"><?php echo $r['total_questions']; ?></td>
+                                        <td style="text-align: center;">
+                                            <span style="font-weight: 800; font-size: 1rem;" class="<?php echo $pClass; ?>">
+                                                <?php echo $p; ?>%
+                                            </span>
+                                        </td>
+                                        <td style="text-align: center; color: var(--text-light); font-size: 0.85rem;">
+                                            <?php echo date('M j, Y H:i', strtotime($r['completed_at'])); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" style="text-align:center; padding: 3rem; color: var(--text-light);">
+                                        <i class="fas fa-folder-open fa-3x" style="opacity: 0.2; display: block; margin-bottom: 1rem;"></i>
+                                        No results found.
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <?php if ($total_pages > 1): ?>
+                <div class="pagination">
+                    <?php if ($page > 1): ?>
+                        <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="pagination-link">&laquo;</a>
+                    <?php endif; ?>
+
+                    <?php 
+                    $range = 2; // Number of pages before and after current
+                    for ($i = 1; $i <= $total_pages; $i++): 
+                        if ($i == 1 || $i == $total_pages || ($i >= $page - $range && $i <= $page + $range)): 
+                    ?>
+                        <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" 
+                           class="pagination-link <?php echo ($i == $page) ? 'active' : ''; ?>">
+                            <?php echo $i; ?>
+                        </a>
+                    <?php 
+                        elseif ($i == 2 || $i == $total_pages - 1): 
+                            echo '<span style="color: var(--text-light); padding: 0.5rem;">...</span>';
+                        endif; 
+                    endfor; 
+                    ?>
+
+                    <?php if ($page < $total_pages): ?>
+                        <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="pagination-link">&raquo;</a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</main>
+
+<?php include '../includes/footer.php'; ?>
 <script src="../assets/js/script.js"></script>
-</body></html>
+</body>
+</html>

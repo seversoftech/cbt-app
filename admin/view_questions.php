@@ -89,262 +89,295 @@ $msg = $_GET['msg'] ?? '';
 $msg_count = $_GET['count'] ?? 0;
 ?>
 
-<?php include '../includes/header.php'; ?>
+<?php include '../includes/header.php'; 
+include '../includes/admin_nav.php'; // Unified Admin Navbar
+?>
 
-<div class="card">
-    <h2>Manage Questions</h2>
-    
-    <!-- Messages -->
-    <?php if ($msg): ?>
-        <div class="<?php echo strpos($msg, 'deleted') !== false ? 'success' : 'success'; // simple logic for now ?>" style="margin-bottom: 1rem; color: var(--secondary); background: #ecfdf5; padding: 1rem; border-radius: 0.5rem;">
-            <?php 
-            if ($msg === 'deleted') echo 'Question deleted successfully.';
-            elseif ($msg === 'updated') echo 'Question updated successfully.';
-            elseif ($msg === 'category_deleted') echo "Category deleted successfully. Removed $msg_count question(s).";
-            elseif ($msg === 'category_not_found') echo 'Category not found or no questions to delete.';
-            ?>
-        </div>
-    <?php endif; ?>
-
-    <div style="margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
-        <a href="dashboard.php" class="btn" style="background: var(--text-light);">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </a>
-        <form method="GET" style="display: flex; gap: 0.5rem; flex: 1;">
-            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search question or category..." class="form-control" style="max-width: 300px;">
-            <button type="submit" class="btn">Search</button>
-        </form>
-    </div>
-
-    <!-- ===== CATEGORY MANAGEMENT SECTION ===== -->
-    <div class="card" style="margin: 0 0 2rem 0; background: #f9fafb; border: 1px dashed #d1d5db; padding: 1.5rem; width: 100%; box-shadow: none;">
-        <h3>Manage Categories</h3>
-        <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">Select a category to delete it along with all its questions.</p>
-        <?php if (empty($categories)): ?>
-            <p>No categories available.</p>
-        <?php else: ?>
-            <form id="categoryDeleteForm" method="GET" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
-                <input type="hidden" name="page" value="<?php echo $page; ?>">
-                <select name="delete_category" id="categorySelectDelete" required class="form-control" style="max-width: 300px;">
-                    <option value="">Select a category to delete</option>
-                    <?php foreach ($categories as $cat): ?>
-                        <option value="<?php echo htmlspecialchars($cat['category']); ?>">
-                            <?php echo htmlspecialchars($cat['category']); ?> (<?php echo $cat['question_count']; ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <button type="button" class="btn btn-danger" onclick="handleCategoryDeleteConfirm()">
-                    Delete Category
-                </button>
-            </form>
-        <?php endif; ?>
-    </div>
-
-    <?php if ($edit_q): ?>
-        <!-- ===== EDIT FORM ===== -->
-        <div class="card" style="margin: 0 0 2rem 0; background: #fef3c7; border: 1px solid #fcd34d; width: 100%; box-shadow: none;">
-            <h3>Edit Question (ID: <?php echo $edit_q['id']; ?>)</h3>
-            <form method="POST" style="display: grid; gap: 1rem;">
-                <input type="hidden" name="edit_id" value="<?php echo $edit_q['id']; ?>">
-                
-                <div class="form-group">
-                    <label>Question</label>
-                    <textarea name="question" required rows="3" class="form-control"><?php echo htmlspecialchars($edit_q['question']); ?></textarea>
+<main style="padding-bottom: 4rem;">
+    <div class="container" style="padding-top: 2rem;">
+        <div class="card">
+            <!-- Page Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="background: var(--primary-light); color: var(--primary); padding: 0.75rem; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fa-solid fa-list-check" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.75rem;">Manage Questions</h2>
+                        <p style="margin: 0; color: var(--text-light); font-size: 0.9rem;">Maintain and organize your question bank</p>
+                    </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                    <div class="form-group">
-                        <label>Option A</label>
-                        <input type="text" name="a" value="<?php echo htmlspecialchars($edit_q['option_a']); ?>" required class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label>Option B</label>
-                        <input type="text" name="b" value="<?php echo htmlspecialchars($edit_q['option_b']); ?>" required class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label>Option C</label>
-                        <input type="text" name="c" value="<?php echo htmlspecialchars($edit_q['option_c']); ?>" required class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label>Option D</label>
-                        <input type="text" name="d" value="<?php echo htmlspecialchars($edit_q['option_d']); ?>" required class="form-control">
-                    </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <a href="add_question.php" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Question
+                    </a>
+                    <a href="dashboard.php" class="btn" style="background: var(--text-light); box-shadow: none;">
+                        <i class="fas fa-arrow-left"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <?php if ($msg): ?>
+                <div style="margin-bottom: 2rem; background: var(--bg-body); border-left: 4px solid var(--secondary); padding: 1rem; border-radius: var(--radius-md); color: var(--text-main); display: flex; align-items: center; gap: 10px; border: 1px solid var(--glass-border);">
+                    <i class="fas fa-check-circle text-secondary"></i>
+                    <span>
+                        <?php 
+                        if ($msg === 'deleted') echo 'Question deleted successfully.';
+                        elseif ($msg === 'updated') echo 'Question updated successfully.';
+                        elseif ($msg === 'category_deleted') echo "Category deleted successfully. Removed $msg_count question(s).";
+                        elseif ($msg === 'category_not_found') echo 'Category not found or no questions to delete.';
+                        ?>
+                    </span>
+                    <button onclick="this.parentElement.style.display='none'" style="margin-left: auto; background:none; border:none; cursor:pointer; color:inherit; font-size:1.2rem; opacity:0.5;">&times;</button>
+                </div>
+            <?php endif; ?>
+
+            <!-- Toolbar Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <!-- Search -->
+                <div>
+                    <label>Search Questions</label>
+                    <form method="GET" style="display: flex; gap: 0.5rem;">
+                        <div style="position: relative; flex: 1;">
+                            <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-light);"></i>
+                            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search text or category..." 
+                                   style="padding-left: 2.8rem;">
+                        </div>
+                        <button type="submit" class="btn">Search</button>
+                    </form>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label>Correct Answer</label>
-                        <select name="correct" class="form-control">
-                            <?php foreach (['A','B','C','D'] as $opt): ?>
-                                <option value="<?php echo $opt; ?>" <?php echo $edit_q['correct_answer'] === $opt ? 'selected' : ''; ?>><?php echo $opt; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Category</label>
-                        <input type="text" name="category" value="<?php echo htmlspecialchars($edit_q['category']); ?>" class="form-control">
-                    </div>
+                <!-- Category Bulk Delete -->
+                <div>
+                    <label>Bulk Actions</label>
+                    <form id="categoryDeleteForm" method="GET" style="display: flex; gap: 0.5rem;">
+                        <div style="flex: 1;">
+                            <select name="delete_category" id="categorySelectDelete" required class="modern-select">
+                                <option value="">Delete a category...</option>
+                                <?php if ($categories): ?>
+                                    <?php foreach ($categories as $cat): ?>
+                                        <option value="<?php echo htmlspecialchars($cat['category']); ?>">
+                                            "<?php echo htmlspecialchars($cat['category']); ?>" (<?php echo $cat['question_count']; ?> Qs)
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-danger" onclick="handleCategoryDeleteConfirm()" title="Delete category">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
                 </div>
+            </div>
 
-                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                    <button type="submit" class="btn">Update Question</button>
-                    <a href="view_questions.php" class="btn btn-danger" style="background: var(--text-light);">Cancel</a>
+            <?php if ($edit_q): ?>
+                <!-- ===== EDIT FORM OVERLAY (MODERN) ===== -->
+                <div style="background: var(--bg-body); border: 2px solid var(--primary); border-radius: var(--radius-xl); padding: 2rem; margin-bottom: 3rem; position: relative;">
+                    <div style="position: absolute; top: 1rem; right: 1rem;">
+                        <a href="view_questions.php" style="color: var(--text-light); text-decoration: none; font-size: 1.5rem;">&times;</a>
+                    </div>
+                    <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                        <i class="fas fa-edit"></i> Edit Question #<?php echo $edit_q['id']; ?>
+                    </h3>
+                    
+                    <form method="POST">
+                        <input type="hidden" name="edit_id" value="<?php echo $edit_q['id']; ?>">
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <label>Question Text</label>
+                            <textarea name="question" required rows="3"><?php echo htmlspecialchars($edit_q['question']); ?></textarea>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                            <div>
+                                <label>Option A</label>
+                                <input type="text" name="a" value="<?php echo htmlspecialchars($edit_q['option_a']); ?>" required>
+                            </div>
+                            <div>
+                                <label>Option B</label>
+                                <input type="text" name="b" value="<?php echo htmlspecialchars($edit_q['option_b']); ?>" required>
+                            </div>
+                            <div>
+                                <label>Option C</label>
+                                <input type="text" name="c" value="<?php echo htmlspecialchars($edit_q['option_c']); ?>" required>
+                            </div>
+                            <div>
+                                <label>Option D</label>
+                                <input type="text" name="d" value="<?php echo htmlspecialchars($edit_q['option_d']); ?>" required>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                             <div>
+                                <label>Correct Answer</label>
+                                <select name="correct" class="modern-select">
+                                    <?php foreach (['A','B','C','D'] as $opt): ?>
+                                        <option value="<?php echo $opt; ?>" <?php echo $edit_q['correct_answer'] === $opt ? 'selected' : ''; ?>><?php echo $opt; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Category</label>
+                                <input type="text" name="category" value="<?php echo htmlspecialchars($edit_q['category']); ?>">
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem;">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+                            <a href="view_questions.php" class="btn" style="background: var(--text-light); box-shadow: none;">Cancel</a>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            <?php endif; ?>
+
+            <!-- Questions Table -->
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="8%">ID</th>
+                                <th width="42%">Question</th>
+                                <th width="15%">Category</th>
+                                <th width="10%" style="text-align: center;">Answer</th>
+                                <th width="15%" style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($questions): ?>
+                                <?php foreach ($questions as $q): ?>
+                                    <tr>
+                                        <td style="color: var(--text-light); font-size: 0.85rem;">#<?php echo $q['id']; ?></td>
+                                        <td style="font-weight: 500;">
+                                            <div style="max-height: 3rem; overflow: hidden; text-overflow: ellipsis;">
+                                                <?php echo htmlspecialchars($q['question']); ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span style="background: var(--primary-light); color: var(--primary); padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 700; white-space: nowrap;">
+                                                <?php echo htmlspecialchars($q['category']); ?>
+                                            </span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <span style="width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.1); color: var(--secondary); border-radius: 50%; font-weight: 900;">
+                                                <?php echo $q['correct_answer']; ?>
+                                            </span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <div style="display: flex; gap: 0.4rem; justify-content: center;">
+                                                <a href="?edit=<?php echo $q['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>" class="btn" style="padding: 0.4rem; background: var(--text-light); box-shadow: none;" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button onclick="showConfirmModal('Delete Question', 'Permenently delete this question?', () => window.location.href = '?delete=<?php echo $q['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>');" class="btn btn-danger" style="padding: 0.4rem;" title="Delete">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="5" style="text-align:center; padding: 3rem; color: var(--text-light);">
+                                        <i class="fas fa-search-minus fa-3x" style="opacity: 0.2; display: block; margin-bottom: 1rem;"></i>
+                                        No questions found.
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <?php if ($total_pages > 1): ?>
+                <div class="pagination">
+                    <?php if ($page > 1): ?>
+                        <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="pagination-link">&laquo;</a>
+                    <?php endif; ?>
+
+                    <?php 
+                    $range = 2; // Number of pages before and after the current page
+                    $show_dots_at = $range * 2 + 1;
+
+                    for ($i = 1; $i <= $total_pages; $i++): 
+                        if ($i == 1 || $i == $total_pages || ($i >= $page - $range && $i <= $page + $range)): 
+                    ?>
+                        <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" 
+                           class="pagination-link <?php echo ($i == $page) ? 'active' : ''; ?>">
+                            <?php echo $i; ?>
+                        </a>
+                    <?php 
+                        elseif ($i == 2 || $i == $total_pages - 1): 
+                            echo '<span style="color: var(--text-light); padding: 0.5rem;">...</span>';
+                        endif; 
+                    endfor; 
+                    ?>
+
+                    <?php if ($page < $total_pages): ?>
+                        <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="pagination-link">&raquo;</a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
-    <?php endif; ?>
-
-    <!-- ===== QUESTIONS TABLE ===== -->
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th style="width: 40%;">Question</th>
-                    <th>Category</th>
-                    <th>Correct</th>
-                    <th style="text-align: center;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if ($questions): ?>
-                    <?php foreach ($questions as $q): ?>
-                        <tr>
-                            <td><?php echo $q['id']; ?></td>
-                            <td><?php echo htmlspecialchars(substr($q['question'], 0, 80)) . (strlen($q['question']) > 80 ? '...' : ''); ?></td>
-                            <td><span style="background: #e0e7ff; color: #4338ca; padding: 0.2rem 0.6rem; border-radius: 99px; font-size: 0.85rem;"><?php echo htmlspecialchars($q['category']); ?></span></td>
-                            <td style="font-weight: bold;"><?php echo $q['correct_answer']; ?></td>
-                            <td style="text-align: center;">
-                                <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                                    <a href="?edit=<?php echo $q['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: var(--text-light);">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button onclick="showConfirmModal('Delete Question', 'Delete this question?', () => window.location.href = '?delete=<?php echo $q['id']; ?>&page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>');" class="btn btn-danger" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-light);">No questions found.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-
-        <!-- ===== PAGINATION ===== -->
-      <!-- ===== PAGINATION ===== -->
-<?php if ($total_pages > 1): ?>
-    <div style="text-align:center; margin-top: 1rem;">
-        <?php
-        // Config for smart pagination
-        $delta = 2; // Pages before/after current (total around current: 1 + 2*delta = 5)
-        $show_first_last = true; // Show page 1 and last
-        $ellipsis = '...'; // Text for gaps
-
-        // Prev button
-        if ($page > 1): ?>
-            <a href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>" class="btn">&laquo; Prev</a>
-        <?php endif; ?>
-
-        <?php
-        // Always show page 1
-        if ($show_first_last && $page > $delta + 2): ?>
-            <a href="?page=1&search=<?php echo urlencode($search); ?>" class="btn">1</a>
-            <?php if ($page > $delta + 3): echo '<span class="pagination-ellipsis">' . $ellipsis . '</span>'; endif; ?>
-        <?php endif;
-
-        // Pages around current
-        for ($i = max(2, $page - $delta); $i <= min($total_pages - 1, $page + $delta); $i++): ?>
-            <a href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>" class="btn" style="margin:0 0.2rem; <?php echo ($i == $page) ? 'background:#2563eb;color:#fff;' : ''; ?>">
-                <?php echo $i; ?>
-            </a>
-        <?php endfor;
-
-        // Always show last page
-        if ($show_first_last && $page < $total_pages - $delta): ?>
-            <?php if ($page < $total_pages - $delta - 1): echo '<span class="pagination-ellipsis">' . $ellipsis . '</span>'; endif; ?>
-            <a href="?page=<?php echo $total_pages; ?>&search=<?php echo urlencode($search); ?>" class="btn"><?php echo $total_pages; ?></a>
-        <?php endif; ?>
-
-       
-        <?php if ($page < $total_pages): ?>
-            <a href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>" class="btn">Next &raquo;</a>
-        <?php endif; ?>
     </div>
-<?php endif; ?>
-    </div>
-</div>
+</main>
 
 <!-- Confirmation Modal -->
 <div id="confirmModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="confirmTitle">Confirm</h3>
+            <h3 id="confirmTitle" style="margin: 0;">Confirm Action</h3>
             <span class="close" onclick="closeConfirmModal()">&times;</span>
         </div>
         <div class="modal-body">
-            <p id="confirmMessage"></p>
+            <p id="confirmMessage" style="color: var(--text-main); font-size: 1.1rem; line-height: 1.4;"></p>
         </div>
         <div class="modal-footer">
-            <button id="confirmYes" class="btn btn-danger">Yes</button>
-            <button id="confirmNo" class="btn">No</button>
+            <button id="confirmNo" class="btn" style="background: var(--text-light); box-shadow: none;">Cancel</button>
+            <button id="confirmYes" class="btn btn-danger">Yes, Proceed</button>
         </div>
     </div>
 </div>
 
-<?php 
-include '../includes/footer.php'; 
-?>
-
+<?php include '../includes/footer.php'; ?>
 <script src="../assets/js/script.js"></script>
 <script>
 let confirmAction = null;
-
 function showConfirmModal(title, message, action) {
     document.getElementById('confirmTitle').textContent = title;
     document.getElementById('confirmMessage').textContent = message;
     confirmAction = action;
-    document.getElementById('confirmModal').style.display = 'flex';
+    const modal = document.getElementById('confirmModal');
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        modal.classList.add('active'); // CSS hook for opacity
+        modal.style.opacity = '1';
+    }, 10);
 }
-
 function closeConfirmModal() {
-    document.getElementById('confirmModal').style.display = 'none';
-    confirmAction = null;
+    const modal = document.getElementById('confirmModal');
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.display = 'none';
+        confirmAction = null;
+    }, 300);
 }
-
 function handleCategoryDeleteConfirm() {
     const select = document.getElementById('categorySelectDelete');
-    if (!select.value) {
-        alert('Please select a category first.'); // Fallback for no selection
-        return;
-    }
-    const countMatch = select.selectedOptions[0].textContent.match(/\((\d+) questions\)/);
-    const count = countMatch ? countMatch[1] : 0;
-    const msg = `Are you sure? This will delete the selected category and all ${count} related questions. This cannot be undone.`;
-    showConfirmModal('Delete Category', msg, () => {
-        document.getElementById('categoryDeleteForm').submit();
-    });
+    if (!select.value) return;
+    const msg = `Delete EVERYTHING in "${select.value}"? This cannot be undone.`;
+    showConfirmModal('Delete Category', msg, () => document.getElementById('categoryDeleteForm').submit());
 }
-
-// Event listeners
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('confirmYes').addEventListener('click', () => {
-        if (confirmAction) {
-            confirmAction();
-        }
+        if (confirmAction) confirmAction();
         closeConfirmModal();
     });
     document.getElementById('confirmNo').addEventListener('click', closeConfirmModal);
-
-    // Close on outside click
     const modal = document.getElementById('confirmModal');
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeConfirmModal();
-        }
-    });
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeConfirmModal(); });
 });
 </script>
 </body>
