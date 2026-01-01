@@ -68,12 +68,12 @@ include '../includes/header.php';
                 <h3>Tests Taken</h3>
             </div>
 
-            <div class="stat-card">
+            <div class="stat-card clickable" onclick="window.location.href='analytics.php'" style="cursor: pointer;">
                  <div class="stat-icon" style="color: #db2777; background: #fce7f3;">
                     <i class="fas fa-chart-pie"></i>
                 </div>
                 <p class="stat-value"><?php echo $avg_score; ?>%</p>
-                <h3>Avg. Score</h3>
+                <h3>Avg. Score (Analytics)</h3>
             </div>
         </section>
 

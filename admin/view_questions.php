@@ -98,7 +98,7 @@ $total = $total_stmt->fetchColumn();
 $total_pages = ceil($total / $limit);
 
 // ====== FETCH PAGINATED QUESTIONS ======
-$sql = "SELECT id, question, category, correct_answer, image, created_at FROM questions $where ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
+$sql = "SELECT id, question, category, correct_answer, image, type, created_at FROM questions $where ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
 $stmt = $pdo->prepare($sql);
 foreach ($params as $key => $value) {
     $stmt->bindValue($key, $value);
@@ -298,7 +298,8 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
                             <tr>
                                 <th width="8%">ID</th>
                                 <th width="42%">Question</th>
-                                <th width="15%">Category</th>
+                                <th width="12%">Category</th>
+                                <th width="8%" style="text-align: center;">Type</th>
                                 <th width="10%" style="text-align: center;">Answer</th>
                                 <th width="15%" style="text-align: center;">Actions</th>
                             </tr>
@@ -324,8 +325,15 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
                                             </span>
                                         </td>
                                         <td style="text-align: center;">
+                                            <?php if (($q['type'] ?? 'objective') === 'theory'): ?>
+                                                <span title="Theory" style="color: #ea580c; background: #fff7ed; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;"><i class="fas fa-pen-fancy"></i></span>
+                                            <?php else: ?>
+                                                <span title="Objective" style="color: var(--secondary); background: #ecfdf5; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;"><i class="fas fa-list-ul"></i></span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td style="text-align: center;">
                                             <span style="width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; background: rgba(16, 185, 129, 0.1); color: var(--secondary); border-radius: 50%; font-weight: 900;">
-                                                <?php echo $q['correct_answer']; ?>
+                                                <?php echo $q['correct_answer'] ?: '-'; ?>
                                             </span>
                                         </td>
                                         <td style="text-align: center;">

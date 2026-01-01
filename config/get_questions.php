@@ -22,9 +22,22 @@ if (!isset($_SESSION['test_start_time'])) {
         echo json_encode(['error' => 'Category required for new test']);
         exit;
     }
-    // Load questions for category
-    $stmt = $pdo->prepare("SELECT * FROM questions WHERE category = ? ORDER BY RAND()");
-    $stmt->execute([$category]);
+    // Load questions for category and type
+    $type = $_GET['type'] ?? 'all';
+    
+    $sql = "SELECT * FROM questions WHERE category = ?";
+    $params = [$category];
+
+    if ($type === 'objective') {
+        $sql .= " AND type = 'objective'";
+    } elseif ($type === 'theory') {
+        $sql .= " AND type = 'theory'";
+    }
+    
+    $sql .= " ORDER BY RAND()";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     $db_questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
     if (empty($db_questions)) {
         echo json_encode(['error' => 'No questions found for category: ' . $category]);

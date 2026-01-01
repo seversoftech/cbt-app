@@ -16,10 +16,11 @@ if ($_POST) {
     $correct = $_POST['correct'];
     $category = trim($_POST['category'] ?? 'General');
     $new_category = trim($_POST['new_category'] ?? '');
+    $type = $_POST['type'] ?? 'objective';
 
-    if (empty($question) || empty($option_a) || empty($option_b) || empty($option_c) || empty($option_d) || empty($correct)) {
-        $error = 'All fields are required.';
-    } elseif (!in_array($correct, ['A', 'B', 'C', 'D'])) {
+    if (empty($question) || ($type === 'objective' && (empty($option_a) || empty($option_b) || empty($option_c) || empty($option_d) || empty($correct)))) {
+        $error = 'All fields are required for objective questions.';
+    } elseif ($type === 'objective' && !in_array($correct, ['A', 'B', 'C', 'D'])) {
         $error = 'Invalid correct answer selection.';
     } else {
         // Use new_category if provided, else category
@@ -48,8 +49,9 @@ if ($_POST) {
 
         if (!$error) { // Proceed if no upload error
             try {
-                $stmt = $pdo->prepare("INSERT INTO questions (question, image, option_a, option_b, option_c, option_d, correct_answer, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$question, $imagePath, $option_a, $option_b, $option_c, $option_d, $correct, $final_category]);
+                $type = $_POST['type'] ?? 'objective';
+                $stmt = $pdo->prepare("INSERT INTO questions (question, image, option_a, option_b, option_c, option_d, correct_answer, category, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$question, $imagePath, $option_a, $option_b, $option_c, $option_d, $correct, $final_category, $type]);
                 $success = 'Question added successfully!';
             } catch (PDOException $e) {
                 $error = 'Database error: ' . $e->getMessage();
@@ -113,6 +115,15 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
                        style="display: none; margin-top: 1rem; width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 2px solid var(--primary); background: #ffffff;">
             </div>
 
+            <!-- Question Type -->
+            <div style="margin-bottom: 2rem; background: #f9fafb; padding: 1.5rem; border-radius: 1rem;">
+                <label for="qType" style="display: block; margin-bottom: 0.5rem; font-weight: 700; color: var(--dark);"><i class="fa-solid fa-layer-group me-2"></i>Question Type</label>
+                <select name="type" id="qType" onchange="toggleType()" style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #d1d5db; font-size: 1rem; background: white;">
+                    <option value="objective">Objective (Multiple Choice)</option>
+                    <option value="theory">Theory (Text Answer)</option>
+                </select>
+            </div>
+
             <!-- Question Text -->
             <div style="margin-bottom: 2rem;">
                 <label for="question" style="display: block; margin-bottom: 0.5rem; font-weight: 700; color: var(--dark);"><i class="fa-solid fa-circle-question me-2"></i>Question Text</label>
@@ -126,59 +137,65 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
                 <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--text-light);">Supported formats: JPG, PNG, GIF</p>
             </div>
             
-            <!-- Options Grid -->
-            <div style="margin-bottom: 2rem;">
+            <!-- Options Grid (Objective) -->
+            <div id="objectiveSection" style="margin-bottom: 2rem;">
                  <label style="display: block; margin-bottom: 1rem; font-weight: 700; color: var(--dark);"><i class="fa-solid fa-list-ul me-2"></i>Answer Options</label>
                  
                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
                      <!-- Option A -->
                      <div class="option-input-group" style="position: relative;">
                          <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--text-light); background: #f3f4f6; padding: 0.25rem 0.75rem; border-radius: 0.5rem;">A</span>
-                         <input type="text" name="a" placeholder="Option A Answer" required
+                         <input type="text" name="a" id="inputA" placeholder="Option A Answer" required
                                 style="width: 100%; padding: 0.75rem 0.75rem 0.75rem 3.5rem; border-radius: 0.75rem; border: 1px solid #d1d5db;">
                      </div>
                      <!-- Option B -->
                      <div class="option-input-group" style="position: relative;">
                          <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--text-light); background: #f3f4f6; padding: 0.25rem 0.75rem; border-radius: 0.5rem;">B</span>
-                         <input type="text" name="b" placeholder="Option B Answer" required
+                         <input type="text" name="b" id="inputB" placeholder="Option B Answer" required
                                 style="width: 100%; padding: 0.75rem 0.75rem 0.75rem 3.5rem; border-radius: 0.75rem; border: 1px solid #d1d5db;">
                      </div>
                      <!-- Option C -->
                      <div class="option-input-group" style="position: relative;">
                          <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--text-light); background: #f3f4f6; padding: 0.25rem 0.75rem; border-radius: 0.5rem;">C</span>
-                         <input type="text" name="c" placeholder="Option C Answer" required
+                         <input type="text" name="c" id="inputC" placeholder="Option C Answer" required
                                 style="width: 100%; padding: 0.75rem 0.75rem 0.75rem 3.5rem; border-radius: 0.75rem; border: 1px solid #d1d5db;">
                      </div>
                      <!-- Option D -->
                      <div class="option-input-group" style="position: relative;">
                          <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 800; color: var(--text-light); background: #f3f4f6; padding: 0.25rem 0.75rem; border-radius: 0.5rem;">D</span>
-                         <input type="text" name="d" placeholder="Option D Answer" required
+                         <input type="text" name="d" id="inputD" placeholder="Option D Answer" required
                                 style="width: 100%; padding: 0.75rem 0.75rem 0.75rem 3.5rem; border-radius: 0.75rem; border: 1px solid #d1d5db;">
                      </div>
                  </div>
+
+                 <!-- Correct Answer Selection -->
+                 <div style="margin-top: 2rem; background: #ecfdf5; padding: 1.5rem; border-radius: 1rem; border: 1px dashed var(--secondary);">
+                    <label for="correct" style="display: block; margin-bottom: 0.5rem; font-weight: 700; color: #065f46;"><i class="fa-solid fa-check-circle me-2"></i>Select Correct Answer</label>
+                    <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                            <input type="radio" name="correct" id="radA" value="A" required onchange="highlightCorrect('a')"> 
+                            <span style="font-weight: 600;">Option A</span>
+                        </label>
+                        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                            <input type="radio" name="correct" id="radB" value="B" required onchange="highlightCorrect('b')"> 
+                            <span style="font-weight: 600;">Option B</span>
+                        </label>
+                        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                            <input type="radio" name="correct" id="radC" value="C" required onchange="highlightCorrect('c')"> 
+                            <span style="font-weight: 600;">Option C</span>
+                        </label>
+                        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
+                            <input type="radio" name="correct" id="radD" value="D" required onchange="highlightCorrect('d')"> 
+                            <span style="font-weight: 600;">Option D</span>
+                        </label>
+                    </div>
+                </div>
             </div>
 
-            <!-- Correct Answer Selection -->
-             <div style="margin-bottom: 2.5rem; background: #ecfdf5; padding: 1.5rem; border-radius: 1rem; border: 1px dashed var(--secondary);">
-                <label for="correct" style="display: block; margin-bottom: 0.5rem; font-weight: 700; color: #065f46;"><i class="fa-solid fa-check-circle me-2"></i>Select Correct Answer</label>
-                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-                    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
-                        <input type="radio" name="correct" value="A" required onchange="highlightCorrect('a')"> 
-                        <span style="font-weight: 600;">Option A</span>
-                    </label>
-                    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
-                        <input type="radio" name="correct" value="B" required onchange="highlightCorrect('b')"> 
-                        <span style="font-weight: 600;">Option B</span>
-                    </label>
-                    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
-                        <input type="radio" name="correct" value="C" required onchange="highlightCorrect('c')"> 
-                        <span style="font-weight: 600;">Option C</span>
-                    </label>
-                    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: white; padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;">
-                        <input type="radio" name="correct" value="D" required onchange="highlightCorrect('d')"> 
-                        <span style="font-weight: 600;">Option D</span>
-                    </label>
-                </div>
+            <!-- Theory Section -->
+            <div id="theorySection" style="display: none; margin-bottom: 2rem; background: #fff7ed; padding: 1.5rem; border-radius: 1rem; border: 1px dashed #f97316;">
+                <label style="display: block; margin-bottom: 1rem; font-weight: 700; color: #9a3412;"><i class="fas fa-key me-2"></i>Model Answer / Grading Guide (Optional)</label>
+                <textarea name="model_answer" rows="4" style="width: 100%; padding: 1rem; border-radius: 0.5rem; border: 1px solid #fdba74;" placeholder="Enter the expected answer here to help with grading later..."></textarea>
             </div>
             
             <!-- Submit Button -->
@@ -232,9 +249,38 @@ function highlightCorrect(optionLower) {
         badge.style.background = 'var(--secondary)';
         badge.style.color = 'white';
     }
+    // Toggle Question Type
+    function toggleType() {
+        const type = document.getElementById('qType').value;
+        const objSec = document.getElementById('objectiveSection');
+        const theorySec = document.getElementById('theorySection');
+        
+        // Inputs to require/unrequire
+        const inputs = ['inputA', 'inputB', 'inputC', 'inputD'];
+        const radios = ['radA', 'radB', 'radC', 'radD'];
+
+        if (type === 'theory') {
+            objSec.style.display = 'none';
+            theorySec.style.display = 'block';
+            
+            // Remove required from objective inputs
+            inputs.forEach(id => document.getElementById(id).required = false);
+            radios.forEach(id => document.getElementById(id).required = false);
+        } else {
+            objSec.style.display = 'block';
+            theorySec.style.display = 'none';
+            
+            // Add required back
+            inputs.forEach(id => document.getElementById(id).required = true);
+            // Re-require radios requires slightly different logic in HTML5 (one of group), 
+            // but setting one to required works or just relying on form validation.
+            // Simplest is to set required on at least one, but HTML5 radio groups require only one.
+             radios.forEach(id => document.getElementById(id).required = true);
+        }
+    }
 }
-</script>
-</script>
+
+
 <!-- Summernote JS -->
 <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>

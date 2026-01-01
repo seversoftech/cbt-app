@@ -21,26 +21,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $total = count($questions);
     $failed_questions = [];
 
+    $has_theory = false;
+    $theory_questions_count = 0;
+
     // Loop through questions and compare answers
     foreach ($questions as $index => $q) {
         $ans = $_POST["q{$index}"] ?? '';
-        $correct = $q['correct_answer'] ?? '';
-        
-        if (strcasecmp(trim($ans), trim($correct)) === 0) {
-            $score++;
+        $type = $q['type'] ?? 'objective';
+
+        if ($type === 'theory') {
+            $has_theory = true;
+            $theory_questions_count++;
+            // We don't score theory here. It's 0 until graded.
+            // But we need to save the response. We'll do that after creating the result ID? 
+            // Or we can't get result ID until we insert result. 
+            // Proper flow: Insert result first (score 0 or partial), then insert responses.
         } else {
-            $failed_questions[] = [
-                'question' => $q['question'], // This contains HTML now
-                'image' => $q['image'] ?? null,
-                'user_answer' => $ans ? (strtoupper($ans) . '. ' . ($q['option_' . strtolower($ans)] ?? 'No option selected')) : 'No answer selected',
-                'correct_answer' => $correct ? (strtoupper($correct) . '. ' . ($q['option_' . strtolower($correct)] ?? $correct)) : 'No answer provided',
-                'explanation' => $q['explanation'] ?? 'Review the options carefully.' 
-            ];
+            // Objective Grading
+            $correct = $q['correct_answer'] ?? '';
+            if (strcasecmp(trim($ans), trim($correct)) === 0) {
+                $score++;
+            } else {
+                $failed_questions[] = [
+                    'question' => $q['question'], // This contains HTML now
+                    'image' => $q['image'] ?? null,
+                    'user_answer' => $ans ? (strtoupper($ans) . '. ' . ($q['option_' . strtolower($ans)] ?? 'No option selected')) : 'No answer selected',
+                    'correct_answer' => $correct ? (strtoupper($correct) . '. ' . ($q['option_' . strtolower($correct)] ?? $correct)) : 'No answer provided',
+                    'explanation' => $q['explanation'] ?? 'Review the options carefully.' 
+                ];
+            }
         }
     }
 
-    $percentage = ($total > 0) ? ($score / $total) * 100 : 0;
+    // Calculate percentage based on OBJECTIVE ONLY for now? 
+    // Or if mixed, the score is just objective score. 
+    // Total questions should probably include theory questions in count, but percentage interpretation depends on grading.
+    // Let's say: Percentage is strictly based on what is graded.
+    // If pending grading, percentage shows "Objective Score" but status says "Pending".
     
+    $objective_total = $total - $theory_questions_count;
+    $percentage = ($objective_total > 0) ? ($score / $objective_total) * 100 : 0; // Temp percentage for objective
+    
+    // Status
+    $status = $has_theory ? 'pending_grading' : 'completed';
+
     // Prioritize POST, then Session, then Anonymous
     $student_id = 'Anonymous';
     if (!empty($_POST['student_id'])) {
@@ -49,8 +73,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $student_id = trim($_SESSION['student_id']);
     }
 
-    $stmt = $pdo->prepare("INSERT INTO results (student_id, subject, score, total_questions, percentage) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$student_id, $subject, $score, $total, $percentage]);
+    $stmt = $pdo->prepare("INSERT INTO results (student_id, subject, score, total_questions, percentage, status) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$student_id, $subject, $score, $total, $percentage, $status]);
+    $result_id = $pdo->lastInsertId();
+
+    // Now save Theory Responses
+    if ($has_theory) {
+        $resp_stmt = $pdo->prepare("INSERT INTO student_responses (result_id, student_id, question_id, answer_text) VALUES (?, ?, ?, ?)");
+        foreach ($questions as $index => $q) {
+            if (($q['type'] ?? 'objective') === 'theory') {
+                $ans = $_POST["q{$index}"] ?? '';
+                $resp_stmt->execute([$result_id, $student_id, $q['id'], $ans]);
+            }
+        }
+    }
 
     $_SESSION['failed_questions'] = $failed_questions;
     $_SESSION['last_student_name'] = $student_id; 
@@ -59,16 +95,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     unset($_SESSION['test_questions']);
     unset($_SESSION['test_subject']); 
 
-    echo json_encode(['score' => $score, 'total' => $total, 'percentage' => $percentage]);
+    echo json_encode([
+        'score' => $score, 
+        'total' => $objective_total, // Show total objective questions
+        'percentage' => $percentage,
+        'status' => $status,
+        'has_theory' => $has_theory
+    ]);
     exit;
 }
 
 $score = (int)($_GET['score'] ?? 0);
 $total = (int)($_GET['total'] ?? 0);
+$status_param = $_GET['status'] ?? 'completed'; // Get success status
+
 $percentage = ($total > 0) ? ($score / $total) * 100 : 0;
-$status = $percentage >= 50 ? 'Pass' : 'Fail';
-$statusClass = $percentage >= 50 ? 'success' : 'danger';
-$statusColor = $percentage >= 50 ? 'var(--secondary)' : 'var(--danger)';
+$statusText = $percentage >= 50 ? 'Pass' : 'Fail';
+
+if ($status_param === 'pending_grading') {
+    $statusText = 'Pending Grading';
+    $statusColor = 'var(--warning)';
+    $statusClass = 'warning';
+} else {
+    $statusClass = $percentage >= 50 ? 'success' : 'danger';
+    $statusColor = $percentage >= 50 ? 'var(--secondary)' : 'var(--danger)';
+}
 
 $failed_questions = $_SESSION['failed_questions'] ?? [];
 // Do NOT unset here, let them refresh if they want
@@ -242,11 +293,13 @@ $failed_questions = $_SESSION['failed_questions'] ?? [];
         </div>
 
         <div class="status-badge">
-            <?php echo $status; ?>
+            <?php echo $statusText; ?>
         </div>
 
         <p style="color: var(--text-light); font-size: 1.1rem; margin-bottom: 2.5rem;">
-            <?php if ($percentage >= 50): ?>
+            <?php if ($status_param === 'pending_grading'): ?>
+                 <i class="fas fa-clock" style="color: var(--warning);"></i> Your objective score is ready. Theory answers have been submitted for manual grading.
+            <?php elseif ($percentage >= 50): ?>
                 <i class="fas fa-check-circle" style="color: var(--secondary);"></i> Great job! You passed the exam.
             <?php else: ?>
                 <i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> Don't give up! Keep practicing.

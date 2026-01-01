@@ -160,6 +160,27 @@ async function loadCategories() {
         if (select.options.length <= 1) {
             select.innerHTML = '<option value="">No subjects available</option>';
         }
+
+        // Add Mode Selector if not exists
+        const container = document.getElementById('categoryScreen');
+        let modeSelectDiv = document.getElementById('modeSelectDiv');
+        if (!modeSelectDiv) {
+            modeSelectDiv = document.createElement('div');
+            modeSelectDiv.id = 'modeSelectDiv';
+            modeSelectDiv.style.marginBottom = '20px';
+            modeSelectDiv.style.textAlign = 'center';
+            modeSelectDiv.innerHTML = `
+                <label for="modeSelect" style="display:block; margin-bottom:8px; font-weight:600; color:rgba(255,255,255,0.8);">Select Test Mode:</label>
+                <select id="modeSelect" class="form-select" style="max-width: 300px; margin: 0 auto; padding: 10px; border-radius: 5px;">
+                    <option value="all">Mixed (Objective & Theory)</option>
+                    <option value="objective">Objective Only</option>
+                    <option value="theory">Theory Only</option>
+                </select>
+            `;
+            // Insert before start button
+            const startBtn = document.getElementById('startBtn');
+            if (startBtn) startBtn.parentNode.insertBefore(modeSelectDiv, startBtn);
+        }
         document.getElementById('categoryScreen').style.display = 'block';
         document.getElementById('categoryList').style.display = 'block';
         document.getElementById('resumePrompt').style.display = 'none';
@@ -186,12 +207,14 @@ async function startNewTest() {
         showModal('Please select a subject.', 'warning');
         return;
     }
+    const mode = document.getElementById('modeSelect').value;
+
     selectedCategory = category;
     studentName = studentId;
     localStorage.setItem('cbt_student_name', studentId);
     try {
-        // Fetch questions for selected category and pass student_id
-        const response = await fetch(`../config/get_questions.php?category=${encodeURIComponent(category)}&restart=1&student_id=${encodeURIComponent(studentId)}`);
+        // Fetch questions for selected category and pass student_id and mode
+        const response = await fetch(`../config/get_questions.php?category=${encodeURIComponent(category)}&restart=1&student_id=${encodeURIComponent(studentId)}&type=${encodeURIComponent(mode)}`);
         if (!response.ok) throw new Error('Failed to start test: ' + response.status);
         const text = await response.text();
         if (!text.trim()) throw new Error('Empty response from server');
@@ -228,6 +251,16 @@ async function resumeTest(state) {
         if (radio) radio.checked = true;
     });
     updateProgress();
+
+    // Restore text inputs for theory
+    Object.entries(state.answers || {}).forEach(([indexStr, ans]) => {
+        const index = parseInt(indexStr);
+        const textarea = document.querySelector(`textarea[name="q${index}"]`);
+        if (textarea) textarea.value = ans;
+
+        // Update internal state
+        if (questions[index]) questions[index].saved_answer = ans;
+    });
 }
 
 function displayTestScreen() {
@@ -242,31 +275,51 @@ function displayTestScreen() {
     `;
 
     questions.forEach((q, index) => {
-        const imageHtml = q.image ? `<img src="${q.image}" alt="Question Image" style="max-width: 100%; height: auto; margin-bottom: 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.1);">` : '';
+        const imageHtml = q.image ? `<div style="text-align:center; margin-bottom:15px;"><img src="../${q.image}" alt="Question Image" style="max-height: 300px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>` : '';
+
+        // For theory questions, show textarea; for objective, show radios
+        let optionsHtml = '';
+        if (q.type === 'theory') {
+            optionsHtml = `
+                <div class="theory-answer-area">
+                    <label style="display:block; margin-bottom:10px; color:rgba(255,255,255,0.7);">Write your answer below:</label>
+                    <textarea 
+                        name="q${index}" 
+                        rows="6" 
+                        class="form-control" 
+                        style="width:100%; padding:15px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); color:white; font-size:1rem;"
+                        placeholder="Type answer here..."
+                        oninput="saveTheoryAnswer(${index}, this.value)"
+                    >${q.saved_answer || ''}</textarea>
+                </div>
+            `;
+        } else {
+            // Objective options
+            ['a', 'b', 'c', 'd'].forEach(opt => {
+                const labelChar = String.fromCharCode(65 + ['a', 'b', 'c', 'd'].indexOf(opt));
+                const optionKey = `option_${opt}`;
+                // Only show if option exists (some might be null if manually edited db)
+                if (q[optionKey]) {
+                    optionsHtml += `
+                        <label class="option-label">
+                            <input type="radio" name="q${index}" value="${opt}" ${q.saved_answer === opt ? 'checked' : ''}>
+                            <span class="option-marker">${labelChar}</span>
+                            <span class="option-text">${q[optionKey]}</span>
+                        </label>
+                    `;
+                }
+            });
+        }
 
         html += `
             <div class="question" style="display: ${index === currentQuestionIndex ? 'block' : 'none'};">
                 <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; line-height: 1.5;">
                     <span style="color: rgba(255,255,255,0.6); margin-right: 0.5rem;">${index + 1}.</span>
                     ${imageHtml}
-                    <div>${q.question}</div> 
+                    <div>${q.question}</div> <!-- Rich text supported -->
                 </div>
                 <div class="options-group">
-        `;
-
-        ['a', 'b', 'c', 'd'].forEach(opt => {
-            const labelChar = String.fromCharCode(65 + ['a', 'b', 'c', 'd'].indexOf(opt));
-            const optionKey = `option_${opt}`;
-            html += `
-                <label class="option-label">
-                    <input type="radio" name="q${index}" value="${opt}">
-                    <span class="option-marker">${labelChar}</span>
-                    <span class="option-text">${q[optionKey]}</span>
-                </label>
-            `;
-        });
-
-        html += `
+                    ${optionsHtml}
                 </div>
             </div>
         `;
@@ -307,9 +360,17 @@ function displayTestScreen() {
 
 async function saveState() {
     const answers = {};
+    // Capture Radios
     document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
         const nameMatch = radio.name.match(/q(\d+)/);
         if (nameMatch) answers[nameMatch[1]] = radio.value;
+    });
+    // Capture Textareas (Theory)
+    document.querySelectorAll('textarea[name^="q"]').forEach(textarea => {
+        const nameMatch = textarea.name.match(/q(\d+)/);
+        if (nameMatch && textarea.value.trim() !== '') {
+            answers[nameMatch[1]] = textarea.value;
+        }
     });
     try {
         const response = await fetch('../config/update_test_state.php', {
@@ -406,11 +467,28 @@ function attachRadioListeners() {
     if (testScreen) {
         testScreen.addEventListener('change', async (e) => {
             if (e.target && e.target.type === 'radio') {
+                // Update local model
+                questions[currentQuestionIndex].saved_answer = e.target.value;
                 updateProgress();
                 await saveState();
             }
         });
     }
+}
+
+// New helper for theory
+async function saveTheoryAnswer(index, value) {
+    questions[index].saved_answer = value;
+    // Debounce saveState if needed, but for now simple call is okay or maybe too frequent
+    // To avoid spamming, we might want to just update local state and save on nav
+    // But let's trigger save occasionally or on blur? 
+    // For now, let's just update local 'questions' array. saveState uses the DOM or 'questions' array?
+    // saveState currently reads from DOM inputs. Let's update it to read from 'questions' array or keep DOM source.
+    // Actually, saveState reads DOM. So we don't strictly need to update questions[].saved_answer for saveState to work if we are looking at DOM.
+    // BUT, we need it for persistence if we re-render or resume.
+
+    // Let's rely on saveState() reading the textarea value.
+    // We should call saveState() periodically or on blur.
 }
 
 async function clearTestSession() {
@@ -486,11 +564,19 @@ async function exitToCategories() {
 
 async function submitTest() {
     // Collect answers (same logic as saveState)
+    // Collect answers (same logic as saveState)
     const answers = {};
     document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
         const nameMatch = radio.name.match(/q(\d+)/);
         if (nameMatch) {
             answers[nameMatch[1]] = radio.value;
+        }
+    });
+    // Capture Textareas (Theory)
+    document.querySelectorAll('textarea[name^="q"]').forEach(textarea => {
+        const nameMatch = textarea.name.match(/q(\d+)/);
+        if (nameMatch && textarea.value.trim() !== '') {
+            answers[nameMatch[1]] = textarea.value;
         }
     });
 
