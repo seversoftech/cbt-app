@@ -26,7 +26,7 @@ if ($_POST) {
         $final_category = !empty($new_category) ? $new_category : $category;
 
         try {
-            $stmt = $pdo->prepare("INSERT INTO questions (question, option_a, option_b, option_c, option_d, correct_answer, category) VALUES (?, (?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO questions (question, option_a, option_b, option_c, option_d, correct_answer, category) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([$question, $option_a, $option_b, $option_c, $option_d, $correct, $final_category]);
             $success = 'Question added successfully!';
         } catch (PDOException $e) {
