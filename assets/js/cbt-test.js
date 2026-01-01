@@ -242,9 +242,15 @@ function displayTestScreen() {
     `;
 
     questions.forEach((q, index) => {
+        const imageHtml = q.image ? `<img src="${q.image}" alt="Question Image" style="max-width: 100%; height: auto; margin-bottom: 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.1);">` : '';
+
         html += `
             <div class="question" style="display: ${index === currentQuestionIndex ? 'block' : 'none'};">
-                <h3 id="qtext_${index}">${index + 1}. ${q.question}</h3>
+                <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; line-height: 1.5;">
+                    <span style="color: rgba(255,255,255,0.6); margin-right: 0.5rem;">${index + 1}.</span>
+                    ${imageHtml}
+                    <div>${q.question}</div> 
+                </div>
                 <div class="options-group">
         `;
 

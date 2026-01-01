@@ -25,12 +25,35 @@ if ($_POST) {
         // Use new_category if provided, else category
         $final_category = !empty($new_category) ? $new_category : $category;
 
-        try {
-            $stmt = $pdo->prepare("INSERT INTO questions (question, option_a, option_b, option_c, option_d, correct_answer, category) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$question, $option_a, $option_b, $option_c, $option_d, $correct, $final_category]);
-            $success = 'Question added successfully!';
-        } catch (PDOException $e) {
-            $error = 'Database error: ' . $e->getMessage();
+        // Image Upload Logic
+        $imagePath = null;
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+            $filename = $_FILES['image']['name'];
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            
+            if (in_array($ext, $allowed)) {
+                $newFilename = uniqid('q_', true) . '.' . $ext;
+                $targetDir = '../assets/uploads/questions/';
+                if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
+                
+                $targetPath = $targetDir . $newFilename;
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
+                    $imagePath = 'assets/uploads/questions/' . $newFilename; // Store relative path for frontend
+                }
+            } else {
+                $error = 'Invalid image format. Only JPG, PNG, and GIF are allowed.';
+            }
+        }
+
+        if (!$error) { // Proceed if no upload error
+            try {
+                $stmt = $pdo->prepare("INSERT INTO questions (question, image, option_a, option_b, option_c, option_d, correct_answer, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$question, $imagePath, $option_a, $option_b, $option_c, $option_d, $correct, $final_category]);
+                $success = 'Question added successfully!';
+            } catch (PDOException $e) {
+                $error = 'Database error: ' . $e->getMessage();
+            }
         }
     }
 }
@@ -38,6 +61,8 @@ if ($_POST) {
 <?php include '../includes/header.php';
 include '../includes/admin_nav.php'; // Unified Admin Navbar
 ?>
+<!-- Summernote CSS -->
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
 
 <main style="padding-bottom: 4rem;">
     <div class="container" style="padding-top: 2rem; padding-bottom: 2rem; max-width: 900px;">
@@ -71,7 +96,7 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
             </div>
         <?php endif; ?>
 
-        <form method="POST" id="questionForm">
+        <form method="POST" id="questionForm" enctype="multipart/form-data">
             <!-- Subject Selection -->
             <div style="margin-bottom: 2rem; background: #f9fafb; padding: 1.5rem; border-radius: 1rem;">
                 <label for="category" style="display: block; margin-bottom: 0.5rem; font-weight: 700; color: var(--dark);"><i class="fa-solid fa-folder-open me-2"></i>Subject Category</label>
@@ -91,8 +116,14 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
             <!-- Question Text -->
             <div style="margin-bottom: 2rem;">
                 <label for="question" style="display: block; margin-bottom: 0.5rem; font-weight: 700; color: var(--dark);"><i class="fa-solid fa-circle-question me-2"></i>Question Text</label>
-                <textarea name="question" id="question" placeholder="Type your full question here..." required rows="4" 
-                          style="width: 100%; padding: 1rem; border-radius: 1rem; border: 1px solid #d1d5db; font-size: 1.1rem; line-height: 1.6; resize: vertical; transition: all 0.2s;"></textarea>
+                <textarea name="question" id="summernote" required></textarea>
+            </div>
+
+            <!-- Image Upload -->
+            <div style="margin-bottom: 2rem; background: #f9fafb; padding: 1.5rem; border-radius: 1rem; border: 1px dashed var(--glass-border);">
+                <label for="image" style="display: block; margin-bottom: 0.5rem; font-weight: 700; color: var(--dark);"><i class="fas fa-image me-2"></i>Optional Image</label>
+                <input type="file" name="image" id="image" accept="image/*" style="width: 100%;">
+                <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--text-light);">Supported formats: JPG, PNG, GIF</p>
             </div>
             
             <!-- Options Grid -->
@@ -202,5 +233,23 @@ function highlightCorrect(optionLower) {
         badge.style.color = 'white';
     }
 }
+</script>
+</script>
+<!-- Summernote JS -->
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+<script>
+    $('#summernote').summernote({
+        placeholder: 'Type your question here...',
+        tabsize: 2,
+        height: 150,
+        toolbar: [
+          ['style', ['style']],
+          ['font', ['bold', 'underline', 'clear']],
+          ['color', ['color']],
+          ['para', ['ul', 'ol', 'paragraph']],
+          ['maxHeight', ['400px']]
+        ]
+    });
 </script>
 </body></html>

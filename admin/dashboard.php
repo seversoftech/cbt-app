@@ -208,10 +208,15 @@ include '../includes/footer.php';
             
             if (subjects.length === 0) list.innerHTML = '<p>No subjects.</p>';
             else {
-                let html = '<div style="display: grid; gap: 0.5rem;">';
+                let html = '<div style="display: grid; gap: 0.5rem; max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">';
                 subjects.forEach(s => {
-                    html += `<div style="display: flex; justify-content: space-between; padding: 0.75rem; background: var(--bg-body); border-radius: 0.5rem;">
-                        <strong>${s.category}</strong> <span>${s.count} Qs</span></div>`;
+                    html += `<a href="view_questions.php?category=${encodeURIComponent(s.category)}" 
+                        style="display: flex; justify-content: space-between; padding: 1rem; background: var(--bg-body); border-radius: 0.5rem; text-decoration: none; color: var(--text-main); transition: var(--transition); border: 1px solid transparent;"
+                        onmouseover="this.style.borderColor='var(--primary)'; this.style.transform='translateX(5px)'"
+                        onmouseout="this.style.borderColor='transparent'; this.style.transform='translateX(0)'">
+                        <strong style="color: var(--primary);">${s.category}</strong> 
+                        <span style="background: var(--primary-light); padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 700;">${s.count} Qs</span>
+                    </a>`;
                 });
                 list.innerHTML = html + '</div>';
             }

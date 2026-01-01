@@ -1,0 +1,26 @@
+POST: Array
+(
+    [q0] => B
+    [subject] => Tech
+)
+
+SESSION: Array
+(
+    [test_questions] => Array
+        (
+            [0] => Array
+                (
+                    [question] => <b>Bold Question</b> with image
+                    [image] => assets/uploads/questions/test_image.png
+                    [correct_answer] => A
+                    [option_a] => Correct
+                    [option_b] => Wrong
+                    [option_c] => Wrong
+                    [option_d] => Wrong
+                )
+
+        )
+
+    [test_category] => Tech
+    [student_id] => Tester
+)

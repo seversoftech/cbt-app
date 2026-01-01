@@ -1,9 +1,42 @@
 <?php require '../config/db.php';
 if (!isset($_SESSION['admin'])) { header('Location: index.php'); exit; }
 
-// For full Excel, install PhpSpreadsheet: composer require phpoffice/phpspreadsheet
-// Fallback: Assume CSV upload (rename .xlsx to .csv)
-if ($_POST && isset($_FILES['excel']['tmp_name'])) {
+// Handle JSON data from frontend (Excel parsed via SheetJS)
+if ($_POST && isset($_POST['excel_json'])) {
+    $data = json_decode($_POST['excel_json'], true);
+    if ($data && is_array($data)) {
+        $count = 0;
+        $stmt = $pdo->prepare("INSERT INTO questions (question, option_a, option_b, option_c, option_d, correct_answer, category) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        
+        foreach ($data as $row) {
+            // Row format: [Question, A, B, C, D, Correct, Category]
+            // Ensure we have at least question and options + correct answer (index 0-5)
+            if (count($row) >= 6) {
+                // Basic cleanup
+                $question = trim($row[0] ?? '');
+                if (empty($question)) continue; // Skip empty rows
+
+                try {
+                    $stmt->execute([
+                        $question,
+                        trim($row[1] ?? ''),
+                        trim($row[2] ?? ''),
+                        trim($row[3] ?? ''),
+                        trim($row[4] ?? ''),
+                        strtoupper(trim($row[5] ?? '')),
+                        trim($row[6] ?? 'General')
+                    ]);
+                    $count++;
+                } catch (Exception $e) {
+                    // Continue on error for bulk upload, or log it
+                }
+            }
+        }
+        $success = "$count questions uploaded successfully!";
+    }
+}
+// Fallback: CSV upload (server-side)
+elseif ($_POST && isset($_FILES['excel']['tmp_name'])) {
     $file = $_FILES['excel']['tmp_name'];
     if (($handle = fopen($file, "r")) !== FALSE) {
         $row = 1;
@@ -58,13 +91,14 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
                     <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-header);">
                         <i class="fas fa-cloud-upload-alt text-primary"></i> Select File
                     </h3>
-                    <form method="POST" enctype="multipart/form-data">
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <input type="hidden" name="excel_json" id="excel_json">
                         <div style="border: 2px dashed var(--glass-border); padding: 3rem 2rem; border-radius: var(--radius-xl); text-align: center; background: rgba(255,255,255,0.02); transition: var(--transition);" 
                              onmouseover="this.style.borderColor='var(--primary)'; this.style.background='rgba(var(--primary-light-rgb), 0.05)'" 
                              onmouseout="this.style.borderColor='var(--glass-border)'; this.style.background='rgba(255,255,255,0.02)'">
                             <i class="fas fa-file-csv fa-3x" style="color: var(--text-light); margin-bottom: 1rem; opacity: 0.5;"></i>
                             <p style="margin-bottom: 1.5rem; color: var(--text-light);">Drag and drop or click to browse</p>
-                            <input type="file" name="excel" accept=".csv,.xlsx" required 
+                            <input type="file" name="excel" id="excelFile" accept=".csv,.xlsx,.xls" required 
                                    style="width: 100%; max-width: 300px; margin: 0 auto; color: var(--text-main);">
                         </div>
 
@@ -115,5 +149,45 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
 
 <?php include '../includes/footer.php'; ?>
 <script src="../assets/js/script.js"></script>
+<!-- SheetJS for Excel Parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('excelFile');
+    const file = fileInput.files[0];
+    
+    // Only intercept if it's an Excel file (xlsx or xls)
+    if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+        e.preventDefault(); // Stop standard submission
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            
+            // Assume first sheet
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Convert to JSON (array of arrays, header:1 gives us raw rows)
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+            
+            // Remove header row if it contains "Question" or similar
+            if (jsonData.length > 0 && typeof jsonData[0][0] === 'string' && (jsonData[0][0].toLowerCase().includes('question') || jsonData[0][0].toLowerCase() === 'q')) {
+                jsonData.shift();
+            }
+            
+            // Put into hidden input
+            document.getElementById('excel_json').value = JSON.stringify(jsonData);
+            
+            // Submit form programmically
+            // We need to bypass this same listener, so simple submit() usually works
+            document.getElementById('uploadForm').submit();
+        };
+        reader.readAsArrayBuffer(file);
+    }
+    // If CSV, let it propagate normally to server-side handler
+});
+</script>
 </body>
 </html>

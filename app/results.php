@@ -30,7 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $score++;
         } else {
             $failed_questions[] = [
-                'question' => $q['question'],
+                'question' => $q['question'], // This contains HTML now
+                'image' => $q['image'] ?? null,
                 'user_answer' => $ans ? (strtoupper($ans) . '. ' . ($q['option_' . strtolower($ans)] ?? 'No option selected')) : 'No answer selected',
                 'correct_answer' => $correct ? (strtoupper($correct) . '. ' . ($q['option_' . strtolower($correct)] ?? $correct)) : 'No answer provided',
                 'explanation' => $q['explanation'] ?? 'Review the options carefully.' 
@@ -270,11 +271,21 @@ $failed_questions = $_SESSION['failed_questions'] ?? [];
                                 <span style="background: var(--danger); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">
                                     <?php echo $index + 1; ?>
                                 </span>
-                                <?php echo htmlspecialchars(substr($fq['question'], 0, 40)) . (strlen($fq['question']) > 40 ? '...' : ''); ?>
+                                <?php 
+                                    // Strip tags for the summary preview, but keep it short
+                                    $preview = strip_tags($fq['question']);
+                                    echo htmlspecialchars(substr($preview, 0, 40)) . (strlen($preview) > 40 ? '...' : ''); 
+                                ?>
                             </span>
                         </summary>
                         <div class="failed-item-body">
-                            <p style="font-weight: 700; margin-bottom: 1rem;"><?php echo htmlspecialchars($fq['question']); ?></p>
+                            <div style="margin-bottom: 1rem; font-weight: 700;">
+                                <?php if (!empty($fq['image'])): ?>
+                                    <img src="../<?php echo htmlspecialchars($fq['image']); ?>" alt="Question Image" style="max-width: 100%; height: auto; margin-bottom: 0.5rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+                                <?php endif; ?>
+                                <!-- Render HTML content safely -->
+                                <div><?php echo $fq['question']; ?></div>
+                            </div>
                             
                             <div class="answer-row" style="color: var(--danger);">
                                 <span class="answer-label"><i class="fas fa-times-circle"></i> Your Answer:</span>

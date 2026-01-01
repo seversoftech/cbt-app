@@ -58,6 +58,9 @@ if (!isset($_SESSION['test_start_time'])) {
         // Remap correct answer to new position
         $old_correct_pos = array_search($q['correct_answer'], $keys);
         $shuffled_q['correct_answer'] = $keys[$old_correct_pos]; // e.g., 'A' -> 'C'
+        
+        // Add Image path
+        $shuffled_q['image'] = $q['image'] ?? null;
 
         $shuffled_questions[] = $shuffled_q;
     }

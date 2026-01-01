@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Test Excel</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #f3f4f6; }
+        .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); text-align: center; }
+        button { background: #10b981; color: white; border: none; padding: 1rem 2rem; font-size: 1.2rem; border-radius: 0.5rem; cursor: pointer; font-weight: bold; }
+        button:hover { background: #059669; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Test File Generator</h1>
+        <p>Click below to download a sample <b>test.xlsx</b> file with 5 questions.</p>
+        <button onclick="generate()">Download test.xlsx</button>
+    </div>
+
+    <script>
+        function generate() {
+            // Define 5 test questions
+            // Format: [Question, A, B, C, D, Correct, Category]
+            const data = [
+                ["Question Text", "Option A", "Option B", "Option C", "Option D", "Correct Answer (Letter)", "Category"], // Header (Optional, will be skipped by parser if it matches)
+                ["What is the capital of France?", "Paris", "London", "Rome", "Berlin", "A", "Geography"],
+                ["Which language is used for web styling?", "Python", "Java", "HTML", "CSS", "D", "Tech"],
+                ["2 + 2 = ?", "3", "4", "5", "6", "B", "Math"],
+                ["Who wrote Romeo and Juliet?", "Shakespeare", "Dickens", "Hemingway", "Austen", "A", "Literature"],
+                ["What is the speed of light?", "300,000 km/s", "150,000 km/s", "100,000 km/s", "500,000 km/s", "A", "Physics"]
+            ];
+
+            const worksheet = XLSX.utils.aoa_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Questions");
+            
+            XLSX.writeFile(workbook, "test.xlsx");
+        }
+    </script>
+</body>
+</html>
