@@ -1,7 +1,7 @@
 let questions = [];
 let currentQuestionIndex = 0;
 let selectedCategory = '';
-let studentName = '';
+let studentName = localStorage.getItem('cbt_student_name') || '';
 
 let totalTestTime = 1800;
 
@@ -102,10 +102,15 @@ async function checkTestState() {
                 return;
             }
             // Show resume prompt with category
-            document.getElementById('resumeCategory').textContent = state.category || 'General';
-            document.getElementById('resumeQ').textContent = state.current_index + 1;
-            document.getElementById('resumePrompt').style.display = 'block';
-            document.getElementById('categoryScreen').style.display = 'none';
+            const resumeCat = document.getElementById('resumeCategory');
+            const resumeQ = document.getElementById('resumeQ');
+            if (resumeCat) resumeCat.textContent = state.category || 'General';
+            if (resumeQ) resumeQ.textContent = state.current_index + 1;
+
+            const resumePrompt = document.getElementById('resumePrompt');
+            const catScreen = document.getElementById('categoryScreen');
+            if (resumePrompt) resumePrompt.style.display = 'block';
+            if (catScreen) catScreen.style.display = 'none';
 
             // Resume button
             document.getElementById('resumeBtn').addEventListener('click', () => {
@@ -183,6 +188,7 @@ async function startNewTest() {
     }
     selectedCategory = category;
     studentName = studentId;
+    localStorage.setItem('cbt_student_name', studentId);
     try {
         // Fetch questions for selected category and pass student_id
         const response = await fetch(`../config/get_questions.php?category=${encodeURIComponent(category)}&restart=1&student_id=${encodeURIComponent(studentId)}`);
@@ -208,7 +214,8 @@ async function startNewTest() {
 
 async function resumeTest(state) {
     selectedCategory = state.category || 'General';
-    studentName = state.student_id || 'Anonymous';
+    studentName = state.student_id || localStorage.getItem('cbt_student_name') || 'Anonymous';
+    if (studentName !== 'Anonymous') localStorage.setItem('cbt_student_name', studentName);
     questions = state.questions;
     currentQuestionIndex = state.current_index;
     testStartTime = state.start_time;
@@ -418,6 +425,7 @@ async function clearTestSession() {
         const result = await response.json();
         if (result.cleared) {
             console.log('Session cleared successfully');
+            localStorage.removeItem('cbt_student_name');
             return true;
         } else {
             console.warn('Clear response missing "cleared" flag:', result);

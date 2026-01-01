@@ -34,6 +34,11 @@ function isActive($page) {
                 </a>
             </li>
             <li>
+                <a href="settings.php" class="nav-item-link <?php echo isActive('settings.php'); ?>">
+                    <i class="fas fa-cog"></i> <span class="d-none d-md-inline">Settings</span>
+                </a>
+            </li>
+            <li>
                 <a href="../logout.php" class="nav-item-link" style="color: var(--danger);">
                     <i class="fas fa-sign-out-alt"></i> <span class="d-none d-md-inline">Logout</span>
                 </a>

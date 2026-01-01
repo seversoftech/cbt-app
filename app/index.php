@@ -67,7 +67,7 @@
                     <div id="resumePrompt" style="display: none; background: var(--primary-light); padding: 2rem; border-radius: 1rem; border: 1px solid var(--primary); text-align: center; animation: fadeInUp 0.5s;">
                         <i class="fas fa-history text-primary" style="font-size: 2rem; margin-bottom: 1rem;"></i>
                         <h4 style="margin-bottom: 0.5rem;">Resume Session?</h4>
-                        <p style="margin-bottom: 1.5rem; font-size: 0.95rem;">You have an active <strong><span id="resumeCategory"></span></strong> test in progress.</p>
+                        <p style="margin-bottom: 1.5rem; font-size: 0.95rem;">You have an active <strong><span id="resumeCategory"></span></strong> test in progress, starting at question <strong>#<span id="resumeQ">1</span></strong>.</p>
                         <div style="display: flex; gap: 1rem; justify-content: center;">
                             <button id="restartBtn" class="btn btn-danger" style="flex: 1;">Restart</button>
                             <button id="resumeBtn" class="btn" style="flex: 1;">Resume</button>

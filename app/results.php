@@ -227,7 +227,7 @@ $failed_questions = $_SESSION['failed_questions'] ?? [];
     <div class="result-card">
         <h1 style="margin-bottom: 0.5rem; font-size: 2rem;">Result Summary</h1>
         <div style="font-weight: 700; color: var(--text-light); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.85rem;">
-             Student: <span style="color: var(--text-header);"><?php echo htmlspecialchars($_SESSION['last_student_name'] ?? ($_SESSION['student_id'] ?? 'Guest')); ?></span>
+             Student: <span id="displayStudentName" style="color: var(--text-header);"><?php echo htmlspecialchars($_SESSION['last_student_name'] ?? ($_SESSION['student_id'] ?? 'Guest')); ?></span>
         </div>
         <div style="font-weight: 700; color: var(--primary); margin-bottom: 2rem; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.9rem;">
              Subject: <?php echo htmlspecialchars($_GET['subject'] ?? 'General'); ?>
@@ -301,5 +301,15 @@ $failed_questions = $_SESSION['failed_questions'] ?? [];
 
 <?php include '../includes/footer.php'; ?>
 <script src="../assets/js/script.js"></script>
+<script>
+    // Client-side recovery for Student Name
+    document.addEventListener('DOMContentLoaded', () => {
+        const display = document.getElementById('displayStudentName');
+        const localName = localStorage.getItem('cbt_student_name');
+        if (display && localName && (display.textContent.trim() === 'Anonymous' || display.textContent.trim() === 'Guest')) {
+            display.textContent = localName;
+        }
+    });
+</script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');
+/* Fonts are loaded dynamically via header.php settings */
 
 :root {
     /* Color Palette - Default (Light) */
@@ -69,7 +69,7 @@
 
 body {
     font-size: 1rem;
-    font-family: 'Lato', sans-serif;
+    font-family: var(--app-font);
     background: linear-gradient(var(--overlay-color), var(--overlay-color)), url('../images/bg.jpg');
     background-size: cover;
     background-position: center;
@@ -210,7 +210,7 @@ h3 {
     justify-content: center;
     padding: 1.25rem;
     background: var(--bg-body);
-    border-radius: var(--radius-lg);
+    border-radius: 0;
     border: 1px solid var(--glass-border);
     color: var(--text-main);
     text-decoration: none;
@@ -242,7 +242,7 @@ h3 {
     color: var(--text-main);
     font-weight: 600;
     padding: 0.5rem 1rem;
-    border-radius: var(--radius-md);
+    border-radius: 0;
     transition: var(--transition);
     display: flex;
     align-items: center;
@@ -470,8 +470,8 @@ h3 {
     align-items: center;
     padding: 0.5rem 1rem;
     font-weight: 600;
-    border-radius: var(--radius-lg);
-    border: none;
+    border-radius: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
     transition: var(--transition);
     text-decoration: none;
@@ -483,6 +483,7 @@ h3 {
 .btn:hover {
     transform: translateY(-2px);
     opacity: 0.9;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .btn-primary {
@@ -691,7 +692,7 @@ tr:hover td {
     min-width: 2.5rem;
     height: 2.5rem;
     padding: 0 0.75rem;
-    border-radius: var(--radius-md);
+    border-radius: 0;
     background: var(--bg-card);
     border: 1px solid var(--glass-border);
     color: var(--text-main);
@@ -788,7 +789,7 @@ tr:hover td {
 /* --- THEME TOGGLE (FLOATING) --- */
 .theme-toggle {
     position: fixed;
-    top: 20px;
+    bottom: 90px;
     right: 20px;
     width: 3.5rem;
     height: 3.5rem;

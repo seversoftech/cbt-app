@@ -121,8 +121,9 @@ include '../includes/header.php';
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="background: var(--bg-body);">
-                                    <th style="font-size: 0.8rem; padding: 1rem;">Student</th>
-                                    <th style="font-size: 0.8rem; padding: 1rem;">Score</th>
+                                    <th style="font-size: 0.8rem; padding: 1rem; text-align: left;">Student</th>
+                                    <th style="font-size: 0.8rem; padding: 1rem; text-align: left;">Subject</th>
+                                    <th style="font-size: 0.8rem; padding: 1rem; text-align: center;">Score</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -133,9 +134,11 @@ include '../includes/header.php';
                                 <tr style="border-bottom: 1px solid var(--glass-border);">
                                     <td style="padding: 1rem;">
                                         <div style="font-weight: 600; font-size: 0.9rem;"><?php echo htmlspecialchars($act['student_id']); ?></div>
-                                        <div style="font-size: 0.8rem; color: var(--text-light);"><?php echo htmlspecialchars($act['subject']); ?></div>
                                     </td>
                                     <td style="padding: 1rem;">
+                                        <div style="font-size: 0.85rem; font-weight: 500; color: var(--text-main);"><?php echo htmlspecialchars($act['subject']); ?></div>
+                                    </td>
+                                    <td style="padding: 1rem; text-align: center;">
                                         <span style="padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.8rem; font-weight: 700; <?php echo $scoreClass . $bgClass; ?>">
                                             <?php echo $act['percentage']; ?>%
                                         </span>
