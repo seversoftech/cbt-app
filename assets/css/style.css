@@ -478,6 +478,7 @@ h3 {
     gap: 0.5rem;
     color: white;
     background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+    justify-content: center;
 }
 
 .btn:hover {
@@ -610,8 +611,8 @@ label {
 }
 
 .auth-box input {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
     padding: 0.875rem 1.25rem;
     font-size: 1.05rem;
 }

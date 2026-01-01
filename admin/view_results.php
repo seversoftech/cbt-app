@@ -19,6 +19,14 @@ if (isset($_GET['export'])) {
     exit;
 }
 
+// ===== JSON EXPORT (For Client-side Excel/PDF) =====
+if (isset($_GET['export_json'])) {
+    header('Content-Type: application/json');
+    $stmt = $pdo->query("SELECT * FROM results ORDER BY completed_at DESC");
+    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    exit;
+}
+
 // ===== PAGINATION SETTINGS =====
 $limit = 10;
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int) $_GET['page'] : 1;
@@ -72,8 +80,14 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
                 </div>
                 
                 <div style="display: flex; gap: 0.5rem;">
+                    <button onclick="exportExcel()" class="btn" style="background: #107c41; border: none; box-shadow: none;">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                    <button onclick="exportPDF()" class="btn" style="background: #ef4444; border: none; box-shadow: none;">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
                     <a href="?export=1" class="btn btn-success">
-                        <i class="fas fa-file-export"></i> Export CSV
+                        <i class="fas fa-file-csv"></i> CSV
                     </a>
                     <a href="dashboard.php" class="btn" style="background: var(--text-light); box-shadow: none;">
                         <i class="fas fa-arrow-left"></i> Dashboard
@@ -180,5 +194,83 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
 
 <?php include '../includes/footer.php'; ?>
 <script src="../assets/js/script.js"></script>
+
+<!-- Export Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+async function fetchAllData() {
+    try {
+        const res = await fetch('?export_json=1');
+        return await res.json();
+    } catch (error) {
+        alert("Failed to fetch data for export.");
+        console.error(error);
+        return [];
+    }
+}
+
+async function exportExcel() {
+    const data = await fetchAllData();
+    if(data.length === 0) return;
+    
+    // Format data for Excel
+    const formattedData = data.map(row => ({
+        ID: row.id,
+        "Student ID": row.student_id,
+        Subject: row.subject,
+        Score: row.score,
+        "Total Questions": row.total_questions,
+        "Percentage": row.percentage + '%',
+        "Completed At": row.completed_at
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
+    XLSX.writeFile(workbook, "cbt_results.xlsx");
+}
+
+async function exportPDF() {
+    const data = await fetchAllData();
+    if(data.length === 0) return;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    doc.text("CBT Test Results", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 22);
+    
+    const tableColumn = ["ID", "Student ID", "Subject", "Score", "Total", "%", "Date"];
+    const tableRows = [];
+
+    data.forEach(row => {
+        const result = [
+            row.id,
+            row.student_id,
+            row.subject,
+            row.score,
+            row.total_questions,
+            row.percentage + '%',
+            row.completed_at
+        ];
+        tableRows.push(result);
+    });
+
+    doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 30,
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [79, 70, 229] } // Primary color
+    });
+    
+    doc.save("cbt_results.pdf");
+}
+</script>
 </body>
 </html>
