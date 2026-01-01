@@ -170,12 +170,17 @@ async function loadCategories() {
             modeSelectDiv.style.marginBottom = '20px';
             modeSelectDiv.style.textAlign = 'center';
             modeSelectDiv.innerHTML = `
-                <label for="modeSelect" style="display:block; margin-bottom:8px; font-weight:600; color:rgba(255,255,255,0.8);">Select Test Mode:</label>
-                <select id="modeSelect" class="form-select" style="max-width: 300px; margin: 0 auto; padding: 10px; border-radius: 5px;">
-                    <option value="all">Mixed (Objective & Theory)</option>
-                    <option value="objective">Objective Only</option>
-                    <option value="theory">Theory Only</option>
-                </select>
+                <div class="form-group" style="margin-bottom: 2rem; text-align: left;">
+                    <label for="modeSelect" style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: var(--text-main);">Test Mode</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-layer-group" style="position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); color: var(--text-light); z-index: 2;"></i>
+                        <select id="modeSelect" class="modern-select w-100" style="padding-left: 3rem;">
+                            <option value="all">Mixed (Objective & Theory)</option>
+                            <option value="objective">Objective Only</option>
+                            <option value="theory">Theory Only</option>
+                        </select>
+                    </div>
+                </div>
             `;
             // Insert before start button
             const startBtn = document.getElementById('startBtn');
