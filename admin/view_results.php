@@ -136,7 +136,11 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
                                 ?>
                                     <tr>
                                         <td style="color: var(--text-light);">#<?php echo $r['id']; ?></td>
-                                        <td style="font-weight: 600;"><?php echo htmlspecialchars($r['student_id']); ?></td>
+                                        <td style="font-weight: 600;">
+                                            <a href="student_performance.php?student_id=<?php echo urlencode($r['student_id']); ?>" style="color: var(--primary); text-decoration: none; border-bottom: 1px dashed var(--primary-light);">
+                                                <?php echo htmlspecialchars($r['student_id']); ?>
+                                            </a>
+                                        </td>
                                         <td><?php echo htmlspecialchars($r['subject']); ?></td>
                                         <td style="text-align: center; font-weight: 700;"><?php echo $r['score']; ?></td>
                                         <td style="text-align: center; color: var(--text-light);"><?php echo $r['total_questions']; ?></td>

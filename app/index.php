@@ -40,7 +40,7 @@
                             <button onclick="document.getElementById('helpModal').style.display='flex'" style="background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 0.3rem 0.8rem; border-radius: 1rem; font-size: 0.8rem; cursor: pointer;">
                                 <i class="fas fa-question-circle"></i> Need Help?
                             </button>
-                            <a href="check_results.php" style="background: transparent; border: 1px solid var(--secondary); color: var(--secondary); padding: 0.3rem 0.8rem; border-radius: 1rem; font-size: 0.8rem; text-decoration: none; margin-left: 0.5rem; display: inline-block;">
+                            <a href="javascript:void(0)" onclick="openResultModal()" style="background: transparent; border: 1px solid var(--secondary); color: var(--secondary); padding: 0.3rem 0.8rem; border-radius: 1rem; font-size: 0.8rem; text-decoration: none; margin-left: 0.5rem; display: inline-block;">
                                 <i class="fas fa-history"></i> Check Results
                             </a>
                         </div>
@@ -146,6 +146,19 @@
     </div>
 </div>
 
+<div id="resultModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 900px; width: 95%; height: 90vh; display: flex; flex-direction: column;">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;"><i class="fas fa-history text-secondary"></i> Examination History</h3>
+            <button onclick="closeResultModal()" style="background: transparent; border: none; color: var(--text-light); font-size: 2rem; cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+        <div class="modal-body" style="flex: 1; padding: 0; overflow: hidden;">
+            <iframe id="resultIframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+    </div>
+</div>
+
+
 <?php include '../includes/footer.php'; ?>
 <script>
     // Inject Server Settings
@@ -153,5 +166,21 @@
         durationMinutes: <?php echo $app_settings['default_duration'] ?? 30; ?>,
         shuffleQuestions: <?php echo ($app_settings['shuffle_questions'] === 'yes') ? 'true' : 'false'; ?>
     };
+</script>
+<script>
+    function openResultModal() {
+        const modal = document.getElementById('resultModal');
+        const iframe = document.getElementById('resultIframe');
+        iframe.src = 'check_results.php?modal=1';
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    function closeResultModal() {
+        const modal = document.getElementById('resultModal');
+        const iframe = document.getElementById('resultIframe');
+        modal.style.display = 'none';
+        iframe.src = '';
+        document.body.style.overflow = '';
+    }
 </script>
 <script src="../assets/js/cbt-test.js?v=1.2"></script>

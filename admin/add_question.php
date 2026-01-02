@@ -22,7 +22,7 @@ if ($_POST) {
     // If Theory, force objective fields to match DB constraints (empty strings)
     if ($type === 'theory') {
         $option_a = $option_b = $option_c = $option_d = '';
-        $correct = ''; // Ensure not NULL
+        $correct = $_POST['model_answer'] ?? ''; // Capture model answer
     }
 
     if (empty($question) || ($type === 'objective' && (empty($option_a) || empty($option_b) || empty($option_c) || empty($option_d) || empty($correct)))) {
