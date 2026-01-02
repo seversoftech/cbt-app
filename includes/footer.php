@@ -14,6 +14,7 @@ $current_year = date('Y');
             </div>
             
             <div class="footer-center">
+                <a href="../app/check_results.php" class="footer-link">Check Results</a>
                 <a href="../app/support.php" class="footer-link">Support</a>
                 <a href="../app/privacy.php" class="footer-link">Privacy Policy</a>
                 <a href="../app/terms.php" class="footer-link">Terms of Use</a>

@@ -40,6 +40,9 @@
                             <button onclick="document.getElementById('helpModal').style.display='flex'" style="background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 0.3rem 0.8rem; border-radius: 1rem; font-size: 0.8rem; cursor: pointer;">
                                 <i class="fas fa-question-circle"></i> Need Help?
                             </button>
+                            <a href="check_results.php" style="background: transparent; border: 1px solid var(--secondary); color: var(--secondary); padding: 0.3rem 0.8rem; border-radius: 1rem; font-size: 0.8rem; text-decoration: none; margin-left: 0.5rem; display: inline-block;">
+                                <i class="fas fa-history"></i> Check Results
+                            </a>
                         </div>
                         
                         <div id="categoryList" style="display: none; animation: fadeInUp 0.5s ease-out;">

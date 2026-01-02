@@ -3,112 +3,104 @@ require '../config/db.php';
 
 // Handle POST (form submission)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Debug log
-    file_put_contents('debug_post.txt', "POST: " . print_r($_POST, true) . "\nSESSION: " . print_r($_SESSION, true), FILE_APPEND);
+    try {
+        // Debug log
+        // file_put_contents('debug_post.txt', "POST: " . print_r($_POST, true) . "\nSESSION: " . print_r($_SESSION, true), FILE_APPEND);
 
+        // Check if test session exists
+        if (!isset($_SESSION['test_questions']) || empty($_SESSION['test_questions'])) {
+            echo json_encode(['error' => 'No active test session found']);
+            exit;
+        }
 
-    // Check if test session exists
-    if (!isset($_SESSION['test_questions']) || empty($_SESSION['test_questions'])) {
-        echo json_encode(['error' => 'No active test session found']);
-        exit;
-    }
+        // Retrieve subject
+        $subject = $_POST['subject'] ?? ($_SESSION['test_category'] ?? 'Unknown');
 
-    // Retrieve subject
-    $subject = $_POST['subject'] ?? ($_SESSION['test_category'] ?? 'Unknown');
+        $questions = $_SESSION['test_questions'];
+        $score = 0;
+        $total = count($questions);
+        $failed_questions = [];
 
-    $questions = $_SESSION['test_questions'];
-    $score = 0;
-    $total = count($questions);
-    $failed_questions = [];
+        $has_theory = false;
+        $theory_questions_count = 0;
 
-    $has_theory = false;
-    $theory_questions_count = 0;
+        // Loop through questions and compare answers
+        foreach ($questions as $index => $q) {
+            $ans = $_POST["q{$index}"] ?? '';
+            $type = $q['type'] ?? 'objective';
 
-    // Loop through questions and compare answers
-    foreach ($questions as $index => $q) {
-        $ans = $_POST["q{$index}"] ?? '';
-        $type = $q['type'] ?? 'objective';
-
-        if ($type === 'theory') {
-            $has_theory = true;
-            $theory_questions_count++;
-            // We don't score theory here. It's 0 until graded.
-            // But we need to save the response. We'll do that after creating the result ID? 
-            // Or we can't get result ID until we insert result. 
-            // Proper flow: Insert result first (score 0 or partial), then insert responses.
-        } else {
-            // Objective Grading
-            $correct = $q['correct_answer'] ?? '';
-            if (strcasecmp(trim($ans), trim($correct)) === 0) {
-                $score++;
+            if ($type === 'theory') {
+                $has_theory = true;
+                $theory_questions_count++;
             } else {
-                $failed_questions[] = [
-                    'question' => $q['question'], // This contains HTML now
-                    'image' => $q['image'] ?? null,
-                    'user_answer' => $ans ? (strtoupper($ans) . '. ' . ($q['option_' . strtolower($ans)] ?? 'No option selected')) : 'No answer selected',
-                    'correct_answer' => $correct ? (strtoupper($correct) . '. ' . ($q['option_' . strtolower($correct)] ?? $correct)) : 'No answer provided',
-                    'explanation' => $q['explanation'] ?? 'Review the options carefully.' 
-                ];
+                // Objective Grading
+                $correct = $q['correct_answer'] ?? '';
+                if (strcasecmp(trim($ans), trim($correct)) === 0) {
+                    $score++;
+                } else {
+                    $failed_questions[] = [
+                        'question' => $q['question'], // This contains HTML now
+                        'image' => $q['image'] ?? null,
+                        'user_answer' => $ans ? (strtoupper($ans) . '. ' . ($q['option_' . strtolower($ans)] ?? 'No option selected')) : 'No answer selected',
+                        'correct_answer' => $correct ? (strtoupper($correct) . '. ' . ($q['option_' . strtolower($correct)] ?? $correct)) : 'No answer provided',
+                        'explanation' => $q['explanation'] ?? 'Review the options carefully.' 
+                    ];
+                }
             }
         }
-    }
 
-    // Calculate percentage based on OBJECTIVE ONLY for now? 
-    // Or if mixed, the score is just objective score. 
-    // Total questions should probably include theory questions in count, but percentage interpretation depends on grading.
-    // Let's say: Percentage is strictly based on what is graded.
-    // If pending grading, percentage shows "Objective Score" but status says "Pending".
-    
-    $objective_total = $total - $theory_questions_count;
-    $percentage = ($objective_total > 0) ? ($score / $objective_total) * 100 : 0; // Temp percentage for objective
-    
-    // Status
-    $status = $has_theory ? 'pending_grading' : 'completed';
+        $objective_total = $total - $theory_questions_count;
+        $percentage = ($objective_total > 0) ? ($score / $objective_total) * 100 : 0; 
+        
+        $status = $has_theory ? 'pending_grading' : 'completed';
 
-    // Prioritize POST, then Session, then Anonymous
-    $student_id = 'Anonymous';
-    if (!empty($_POST['student_id'])) {
-        $student_id = trim($_POST['student_id']);
-    } elseif (!empty($_SESSION['student_id'])) {
-        $student_id = trim($_SESSION['student_id']);
-    }
+        $student_id = 'Anonymous';
+        if (!empty($_POST['student_id'])) {
+            $student_id = trim($_POST['student_id']);
+        } elseif (!empty($_SESSION['student_id'])) {
+            $student_id = trim($_SESSION['student_id']);
+        }
 
-    $stmt = $pdo->prepare("INSERT INTO results (student_id, subject, score, total_questions, percentage, status) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$student_id, $subject, $score, $total, $percentage, $status]);
-    $result_id = $pdo->lastInsertId();
+        // Insert Result
+        $stmt = $pdo->prepare("INSERT INTO results (student_id, subject, score, total_questions, percentage, status) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$student_id, $subject, $score, $total, $percentage, $status]);
+        $result_id = $pdo->lastInsertId();
 
-    // Now save Theory Responses
-    if ($has_theory) {
-        try {
+        // Save Theory Responses
+        if ($has_theory) {
             $resp_stmt = $pdo->prepare("INSERT INTO student_responses (result_id, student_id, question_id, answer_text) VALUES (?, ?, ?, ?)");
             foreach ($questions as $index => $q) {
                 if (($q['type'] ?? 'objective') === 'theory') {
                     $ans = $_POST["q{$index}"] ?? '';
-                    // Log for debugging
-                    file_put_contents('debug_grading.txt', "Saving Theory Q{$q['id']}: $ans\n", FILE_APPEND);
                     $resp_stmt->execute([$result_id, $student_id, $q['id'], $ans]);
                 }
             }
-        } catch (Exception $e) {
-            file_put_contents('debug_grading_error.txt', "Error saving responses: " . $e->getMessage(), FILE_APPEND);
         }
+
+        $_SESSION['failed_questions'] = $failed_questions;
+        $_SESSION['last_student_name'] = $student_id; 
+        $_SESSION['student_id'] = $student_id; 
+
+        unset($_SESSION['test_questions']);
+        unset($_SESSION['test_subject']); 
+
+        echo json_encode([
+            'score' => $score, 
+            'total' => $objective_total, 
+            'percentage' => $percentage,
+            'status' => $status,
+            'has_theory' => $has_theory
+        ]);
+        exit;
+
+    } catch (Exception $e) {
+        // Log critical error
+        $errorMsg = "Result Submission Error: " . $e->getMessage() . " | Line: " . $e->getLine();
+        file_put_contents('debug_grading_error.txt', $errorMsg . "\n", FILE_APPEND);
+        http_response_code(500);
+        echo json_encode(['error' => 'Server Error: ' . $e->getMessage()]);
+        exit;
     }
-
-    $_SESSION['failed_questions'] = $failed_questions;
-    $_SESSION['last_student_name'] = $student_id; 
-    $_SESSION['student_id'] = $student_id; // Keep it in session for display persistence
-
-    unset($_SESSION['test_questions']);
-    unset($_SESSION['test_subject']); 
-
-    echo json_encode([
-        'score' => $score, 
-        'total' => $objective_total, // Show total objective questions
-        'percentage' => $percentage,
-        'status' => $status,
-        'has_theory' => $has_theory
-    ]);
-    exit;
 }
 
 $score = (int)($_GET['score'] ?? 0);
