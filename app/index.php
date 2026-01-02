@@ -36,7 +36,10 @@
                                 <i class="fas fa-user-graduate" style="font-size: 1.75rem; color: var(--primary);"></i>
                              </div>
                             <h2 style="color: var(--text-header);">Student Portal</h2>
-                            <p id="welcomeMsg" style="color: var(--text-light);">Select your examination subject</p>
+                            <p id="welcomeMsg" style="color: var(--text-light); margin-bottom: 1rem;">Select your examination subject</p>
+                            <button onclick="document.getElementById('helpModal').style.display='flex'" style="background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 0.3rem 0.8rem; border-radius: 1rem; font-size: 0.8rem; cursor: pointer;">
+                                <i class="fas fa-question-circle"></i> Need Help?
+                            </button>
                         </div>
                         
                         <div id="categoryList" style="display: none; animation: fadeInUp 0.5s ease-out;">
@@ -116,5 +119,36 @@
     </div>
 </div>
 
+<div id="helpModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header"><h3><i class="fas fa-life-ring text-primary"></i> Student Guide</h3></div>
+        <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+             <p>Follow these steps to take your exam:</p>
+             <ol style="padding-left: 1.5rem; line-height: 1.8; color: var(--text-main);">
+                 <li>Enter your <strong>Full Name</strong> in the identification field.</li>
+                 <li>Select your <strong>Course / Subject</strong> from the dropdown list.</li>
+                 <li>Choose your <strong>Test Mode</strong> (if available): "Objective", "Theory", or "Mixed".</li>
+                 <li>Click <strong>Start Examination</strong>.</li>
+                 <li>Answer the questions within the allocated time.</li>
+                 <li>Click <strong>Submit</strong> when you are finished.</li>
+             </ol>
+             <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1rem 0;">
+             <p style="font-size: 0.9rem; color: var(--text-light);">
+                <strong>Note:</strong> Do not refresh the page during the test. If your internet disconnects, the system will attempt to save your progress.
+             </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" onclick="document.getElementById('helpModal').style.display='none'">Close Guide</button>
+        </div>
+    </div>
+</div>
+
 <?php include '../includes/footer.php'; ?>
-<script src="../assets/js/cbt-test.js?v=1.1"></script>
+<script>
+    // Inject Server Settings
+    const EXAM_CONFIG = {
+        durationMinutes: <?php echo $app_settings['default_duration'] ?? 30; ?>,
+        shuffleQuestions: <?php echo ($app_settings['shuffle_questions'] === 'yes') ? 'true' : 'false'; ?>
+    };
+</script>
+<script src="../assets/js/cbt-test.js?v=1.2"></script>

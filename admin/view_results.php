@@ -121,8 +121,10 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
                                 <th width="25%">Subject</th>
                                 <th width="10%" style="text-align: center;">Score</th>
                                 <th width="10%" style="text-align: center;">Total</th>
-                                <th width="15%" style="text-align: center;">Percentage</th>
-                                <th width="15%" style="text-align: center;">Completed</th>
+                                <th width="12%" style="text-align: center;">Percentage</th>
+                                <th width="10%" style="text-align: center;">Status</th>
+                                <th width="12%" style="text-align: center;">Completed</th>
+                                <th width="10%" style="text-align: center;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -130,6 +132,7 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
                                 <?php foreach ($results as $r): 
                                     $p = $r['percentage'];
                                     $pClass = $p >= 75 ? 'text-secondary' : ($p >= 50 ? 'text-warning' : 'text-danger');
+                                    $status = $r['status'] ?? 'completed';
                                 ?>
                                     <tr>
                                         <td style="color: var(--text-light);">#<?php echo $r['id']; ?></td>
@@ -139,11 +142,29 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
                                         <td style="text-align: center; color: var(--text-light);"><?php echo $r['total_questions']; ?></td>
                                         <td style="text-align: center;">
                                             <span style="font-weight: 800; font-size: 1rem;" class="<?php echo $pClass; ?>">
-                                                <?php echo $p; ?>%
+                                                <?php echo number_format($p, 1); ?>%
                                             </span>
                                         </td>
+                                        <td style="text-align: center;">
+                                            <?php if ($status === 'pending_grading'): ?>
+                                                <span class="badge" style="background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; padding: 0.25rem 0.5rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 700;">Pending</span>
+                                            <?php else: ?>
+                                                <span class="badge" style="background: #ecfdf5; color: #10b981; padding: 0.25rem 0.5rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 700;">Graded</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td style="text-align: center; color: var(--text-light); font-size: 0.85rem;">
-                                            <?php echo date('M j, Y H:i', strtotime($r['completed_at'])); ?>
+                                            <?php echo date('M j, H:i', strtotime($r['completed_at'])); ?>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <?php if ($status === 'pending_grading'): ?>
+                                                <a href="grade_result.php?id=<?php echo $r['id']; ?>" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                                                    <i class="fas fa-marker"></i> Grade
+                                                </a>
+                                            <?php else: ?>
+                                                <button class="btn" style="background: var(--text-light); box-shadow: none; opacity: 0.5; cursor: not-allowed; padding: 0.4rem 0.8rem; font-size: 0.8rem;" disabled>
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

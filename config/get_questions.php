@@ -62,6 +62,7 @@ if (!isset($_SESSION['test_start_time'])) {
             'id' => $q['id'],
             'question' => $q['question'],
             'category' => $q['category'],
+            'type' => $q['type'], // Crucial for frontend logic
             'original_correct' => $q['correct_answer'], // For internal scoring (keep secret)
         ];
         foreach ($keys as $new_pos => $old_key) {

@@ -26,6 +26,16 @@ function isActive($page) {
             <li>
                 <a href="view_results.php" class="nav-item-link <?php echo isActive('view_results.php'); ?>">
                     <i class="fas fa-chart-bar"></i> <span class="d-none d-md-inline">Results</span>
+                    <?php
+                    // Count pending grades
+                    try {
+                        $pendingStmt = $pdo->query("SELECT COUNT(*) FROM results WHERE status = 'pending_grading'");
+                        $pendingCount = $pendingStmt->fetchColumn();
+                        if ($pendingCount > 0) {
+                            echo '<span class="badge-notification" style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; margin-left: 5px; vertical-align: middle;">' . $pendingCount . '</span>';
+                        }
+                    } catch (Exception $e) { /* ignore silent failure in nav */ }
+                    ?>
                 </a>
             </li>
              <li>

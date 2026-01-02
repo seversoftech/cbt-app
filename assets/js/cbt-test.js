@@ -3,7 +3,10 @@ let currentQuestionIndex = 0;
 let selectedCategory = '';
 let studentName = localStorage.getItem('cbt_student_name') || '';
 
-let totalTestTime = 1800;
+// Use injected config or default to 30 minutes
+let totalTestTime = (typeof EXAM_CONFIG !== 'undefined' && EXAM_CONFIG.durationMinutes)
+    ? EXAM_CONFIG.durationMinutes * 60
+    : 1800;
 
 let confirmationCallback = null;
 
@@ -271,29 +274,36 @@ async function resumeTest(state) {
 function displayTestScreen() {
     let html = `
         <div class="test-inner">
-            <div style="text-align: center; margin-bottom: 2rem; font-weight: 700; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.9rem;">
-                <i class="fas fa-book-open"></i> ${selectedCategory}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                  <div style="font-weight: 700; color: var(--exam-text-muted); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.9rem;">
+                     <i class="fas fa-book-open"></i> ${selectedCategory}
+                  </div>
+                  <div id="timer" class="timer" style="color: var(--exam-text);">30:00</div>
             </div>
-            <form id="testForm">
-                <div id="timer" class="timer">30:00</div>
-                <div class="progress"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+            
+            <div class="progress" style="margin-bottom: 2rem; background: var(--glass-border); border-color: var(--glass-border);"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
     `;
 
     questions.forEach((q, index) => {
-        const imageHtml = q.image ? `<div style="text-align:center; margin-bottom:15px;"><img src="../${q.image}" alt="Question Image" style="max-height: 300px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>` : '';
+        // Badges
+        const typeBadge = q.type === 'theory'
+            ? `<span style="background: #f97316; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; vertical-align: middle; margin-left: 10px; font-weight: bold; letter-spacing: 0.05em;">ESSAY</span>`
+            : `<span style="background: #4f46e5; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; vertical-align: middle; margin-left: 10px; font-weight: bold; letter-spacing: 0.05em;">OBJECTIVE</span>`;
+
+        const imageHtml = q.image ? `<div style="text-align:center; margin-bottom:15px;"><img src="../${q.image}" alt="Question Image" style="max-height: 400px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>` : '';
 
         // For theory questions, show textarea; for objective, show radios
         let optionsHtml = '';
         if (q.type === 'theory') {
             optionsHtml = `
                 <div class="theory-answer-area">
-                    <label style="display:block; margin-bottom:10px; color:rgba(255,255,255,0.7);">Write your answer below:</label>
+                    <label style="display:block; margin-bottom:10px; color:var(--exam-text-muted); font-weight: 600;">Your Answer (Essay):</label>
                     <textarea 
                         name="q${index}" 
-                        rows="6" 
+                        rows="12" 
                         class="form-control" 
-                        style="width:100%; padding:15px; border-radius:8px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); color:white; font-size:1rem;"
-                        placeholder="Type answer here..."
+                        style="width:100%; padding:15px; border-radius:8px; border:1px solid var(--exam-option-border); background: var(--exam-card-bg); color: var(--exam-text); font-size:1rem; line-height: 1.6;"
+                        placeholder="Type your answer here..."
                         oninput="saveTheoryAnswer(${index}, this.value)"
                     >${q.saved_answer || ''}</textarea>
                 </div>
@@ -306,10 +316,10 @@ function displayTestScreen() {
                 // Only show if option exists (some might be null if manually edited db)
                 if (q[optionKey]) {
                     optionsHtml += `
-                        <label class="option-label">
-                            <input type="radio" name="q${index}" value="${opt}" ${q.saved_answer === opt ? 'checked' : ''}>
-                            <span class="option-marker">${labelChar}</span>
-                            <span class="option-text">${q[optionKey]}</span>
+                        <label class="option-label" style="display: flex; align-items: start; padding: 1rem; margin-bottom: 0.5rem; background: var(--exam-option-bg); border: 1px solid var(--exam-option-border); border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                            <input type="radio" name="q${index}" value="${opt}" ${q.saved_answer === opt ? 'checked' : ''} style="margin-top: 4px;">
+                            <span class="option-marker" style="margin-left: 10px; font-weight: bold; color: var(--exam-text-muted); min-width: 20px;">${labelChar}.</span>
+                            <span class="option-text" style="color: var(--exam-text); line-height: 1.4;">${q[optionKey]}</span>
                         </label>
                     `;
                 }
@@ -317,26 +327,36 @@ function displayTestScreen() {
         }
 
         html += `
-            <div class="question" style="display: ${index === currentQuestionIndex ? 'block' : 'none'};">
-                <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; line-height: 1.5;">
-                    <span style="color: rgba(255,255,255,0.6); margin-right: 0.5rem;">${index + 1}.</span>
-                    ${imageHtml}
-                    <div>${q.question}</div> <!-- Rich text supported -->
-                </div>
-                <div class="options-group">
-                    ${optionsHtml}
+            <div class="question" style="display: ${index === currentQuestionIndex ? 'block' : 'none'}; animation: activeCard 0.4s ease-out;">
+                <div class="question-grid">
+                    <!-- Left Col: Question -->
+                    <div class="q-content" style="background: var(--exam-card-bg); padding: 1.5rem; border-radius: 12px; color: var(--exam-text);">
+                        <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; line-height: 1.6; color: var(--exam-text);">
+                            <span style="color: var(--exam-text-muted); margin-right: 0.5rem;">Q${index + 1}.</span>
+                            ${typeBadge}
+                        </div>
+                        <div style="font-size: 1.25rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                            ${imageHtml}
+                            <div class="q-text-body">${q.question}</div> 
+                        </div>
+                    </div>
+
+                    <!-- Right Col: Answer -->
+                    <div class="q-answer-area">
+                         ${optionsHtml}
+                    </div>
                 </div>
             </div>
         `;
     });
 
     html += `
-            <div class="navigation">
-                <div style="margin-bottom: 2rem; color: rgba(255,255,255,0.5); font-weight: 600;">
+            <div class="navigation" style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
+                <div style="margin-bottom: 1.5rem; color: var(--exam-text-muted); font-weight: 600; text-align: center;">
                     Question <span id="currentQ">1</span> of <span id="totalQ">${questions.length}</span>
                 </div>
                 <div class="d-flex justify-content-center gap-3 w-100">
-                    <button type="button" id="prevBtn" class="btn btn-outline-secondary" onclick="prevQuestion()" style="display: none; flex: 1; max-width: 200px;">
+                    <button type="button" id="prevBtn" class="btn btn-outline-secondary" onclick="prevQuestion()" style="display: none; flex: 1; max-width: 200px; color: var(--exam-text); border-color: var(--exam-option-border);">
                         <i class="fas fa-arrow-left"></i> Previous
                     </button>
                     <button type="button" id="nextBtn" class="btn btn-primary" onclick="nextQuestion()" style="flex: 1; max-width: 200px;">
@@ -346,12 +366,39 @@ function displayTestScreen() {
                         Submit Examination <i class="fas fa-check-circle"></i>
                     </button>
                 </div>
-                <button type="button" id="exitBtn" class="btn btn-danger" onclick="exitToCategories()" style="margin-top: 3rem; background: transparent; border: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; padding: 0.5rem 1rem;">
-                    Exit Test
-                </button>
+                <div style="text-align: center;">
+                    <button type="button" id="exitBtn" class="btn btn-danger" onclick="exitToCategories()" style="margin-top: 2rem; background: transparent; border: 1px solid var(--danger); color: var(--danger); font-size: 0.8rem; padding: 0.5rem 1rem;">
+                        Exit Test
+                    </button>
+                </div>
             </div>
             </form>
         </div>
+        
+        <style>
+            .question-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 3rem;
+                align-items: start;
+            }
+            @media (max-width: 768px) {
+                .question-grid {
+                    grid-template-columns: 1fr;
+                    gap: 1.5rem;
+                }
+            }
+            .q-answer-area {
+                 padding: 0.5rem;
+            }
+            .option-label:hover {
+                background: var(--exam-option-hover) !important;
+                border-color: var(--primary) !important;
+            }
+            input[type="radio"]:checked + .option-marker {
+                color: var(--primary) !important;
+            }
+        </style>
     `;
     document.getElementById('testScreen').innerHTML = html;
     document.getElementById('startScreen').style.display = 'none';
@@ -493,7 +540,6 @@ async function saveTheoryAnswer(index, value) {
     // BUT, we need it for persistence if we re-render or resume.
 
     // Let's rely on saveState() reading the textarea value.
-    // We should call saveState() periodically or on blur.
 }
 
 async function clearTestSession() {
@@ -526,6 +572,55 @@ async function clearTestSession() {
     }
 }
 
+// Timer variables
+let timerInterval = null;
+
+function startTimer(startTime, duration) {
+    if (timerInterval) clearInterval(timerInterval);
+
+    // Calculate end time based on start time
+    // We update totalTestTime to reflect current remaining
+    const now = Date.now() / 1000;
+    const elapsed = now - startTime;
+    totalTestTime = Math.max(0, duration - elapsed);
+
+    updateTimer(); // Initial call
+    timerInterval = setInterval(updateTimer, 1000);
+}
+
+function updateTimer() {
+    if (totalTestTime <= 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        showModal('Time is up! Your test handles will be submitted automatically.', 'info', 'Time Up', false, () => {
+            submitTest(true);
+        });
+        // Force submit after closure if not handled
+        submitTest(true);
+        return;
+    }
+
+    const minutes = Math.floor(totalTestTime / 60);
+    const seconds = Math.floor(totalTestTime % 60);
+
+    const timerDisplay = document.getElementById('timer');
+    if (timerDisplay) {
+        timerDisplay.textContent =
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        // Visual warning for last 5 minutes (300 seconds)
+        if (totalTestTime <= 300) {
+            timerDisplay.style.color = '#ef4444';
+            timerDisplay.style.animation = 'pulse 1s infinite';
+        } else {
+            timerDisplay.style.color = 'white';
+            timerDisplay.style.animation = 'none';
+        }
+    }
+
+    totalTestTime--;
+}
+
 async function exitToCategories() {
     showModal(
         `Are you sure you want to exit? Your progress on "${selectedCategory}" will be lost, and you'll return to subject selection.`,
@@ -536,9 +631,8 @@ async function exitToCategories() {
             if (confirmed) {
                 try {
                     // Stop the timer if active
-                    if (typeof stopTimer === 'function') {
-                        stopTimer();
-                    }
+                    if (timerInterval) clearInterval(timerInterval);
+
                     // Clear the test session
                     const cleared = await clearTestSession();
                     if (cleared) {
@@ -606,6 +700,13 @@ async function submitTest() {
     await performSubmit(answers);
 }
 
+// Helper to save theory answer on input
+function saveTheoryAnswer(index, value) {
+    if (questions[index]) {
+        questions[index].saved_answer = value;
+    }
+}
+
 async function performSubmit(answers) {
     try {
         // Use FormData for POST (matches expected $_POST["q0"], etc.)
@@ -618,7 +719,7 @@ async function performSubmit(answers) {
         console.log('Submitting test for student:', studentName);
 
 
-        const response = await fetch('results.php', {
+        const response = await fetch('../app/results.php', {
             method: 'POST',
             body: formData
         });
@@ -632,10 +733,8 @@ async function performSubmit(answers) {
             throw new Error(data.error);
         }
 
-        // Stop the timer (assumes stopTimer() from script.js)
-        if (typeof stopTimer === 'function') {
-            stopTimer();
-        }
+        // Stop the timer
+        if (timerInterval) clearInterval(timerInterval);
 
         // Clear local state
         questions = [];

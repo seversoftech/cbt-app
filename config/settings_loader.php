@@ -17,11 +17,6 @@ try {
     $app_settings['app_font'] = 'Source Sans 3';
 }
 
-// Fallbacks for missing keys
-if (!isset($app_settings['app_font'])) {
-    $app_settings['app_font'] = 'Source Sans 3';
-}
-
 // Mapping font names to Google Fonts families
 $font_mapping = [
     'Inter' => 'Inter:wght@300;400;600;700',
@@ -35,6 +30,19 @@ $font_mapping = [
     'Outfit' => 'Outfit:wght@300;400;600;700',
     'Manrope' => 'Manrope:wght@300;400;600;800'
 ];
+
+// Fallback defaults if keys missing
+$defaults = [
+    'app_font' => 'Source Sans 3',
+    'institution_name' => 'Seversoft CBT',
+    'brand_color' => '#4f46e5',
+    'default_duration' => '30',
+    'pass_mark' => '50',
+    'shuffle_questions' => 'yes',
+    'show_results' => 'yes'
+];
+
+$app_settings = array_merge($defaults, $app_settings);
 
 $current_font_family = $app_settings['app_font'];
 $google_font_query = $font_mapping[$current_font_family] ?? $font_mapping['Source Sans 3'];

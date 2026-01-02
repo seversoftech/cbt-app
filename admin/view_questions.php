@@ -31,12 +31,28 @@ if (isset($_GET['delete_category']) && !empty($_GET['delete_category'])) {
 if ($_POST && isset($_POST['edit_id'])) {
     $question = $_POST['question'];
     $edit_id = $_POST['edit_id'];
-    
+    $type = $_POST['type'] ?? 'objective';
+    $category = $_POST['category'];
+
+    // Handle Options & Correct Answer based on Type
+    $option_a = $_POST['a'] ?? '';
+    $option_b = $_POST['b'] ?? '';
+    $option_c = $_POST['c'] ?? '';
+    $option_d = $_POST['d'] ?? '';
+    $correct = $_POST['correct'] ?? '';
+
+    if ($type === 'theory') {
+        // For theory, clear options
+        $option_a = $option_b = $option_c = $option_d = '';
+        // Use correct_answer column to store the Model Answer text for admins
+        $correct = $_POST['model_answer'] ?? ''; 
+    }
+
     // Handle Image Update
     $imageUpdateSql = "";
     $params = [
-        $question, $_POST['a'], $_POST['b'], $_POST['c'], $_POST['d'],
-        $_POST['correct'], $_POST['category']
+        $question, $option_a, $option_b, $option_c, $option_d,
+        $correct, $category, $type
     ];
 
     if (isset($_FILES['edit_image']) && $_FILES['edit_image']['error'] === UPLOAD_ERR_OK) {
@@ -61,7 +77,7 @@ if ($_POST && isset($_POST['edit_id'])) {
     $params[] = $edit_id; // Add ID last
 
     $sql = "UPDATE questions 
-            SET question = ?, option_a = ?, option_b = ?, option_c = ?, option_d = ?, correct_answer = ?, category = ? $imageUpdateSql
+            SET question = ?, option_a = ?, option_b = ?, option_c = ?, option_d = ?, correct_answer = ?, category = ?, type = ? $imageUpdateSql
             WHERE id = ?";
             
     $stmt = $pdo->prepare($sql);
@@ -231,6 +247,21 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
                     <form method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="edit_id" value="<?php echo $edit_q['id']; ?>">
                         
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <!-- Type & Category -->
+                            <div>
+                                <label>Question Type</label>
+                                <select name="type" id="editType" class="modern-select" onchange="toggleEditType()">
+                                    <option value="objective" <?php echo ($edit_q['type'] ?? 'objective') === 'objective' ? 'selected' : ''; ?>>Objective (Multiple Choice)</option>
+                                    <option value="theory" <?php echo ($edit_q['type'] ?? 'objective') === 'theory' ? 'selected' : ''; ?>>Theory (Essay)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Category</label>
+                                <input type="text" name="category" value="<?php echo htmlspecialchars($edit_q['category']); ?>" required>
+                            </div>
+                        </div>
+
                         <div style="margin-bottom: 1.5rem;">
                             <label>Question Text</label>
                             <textarea name="question" id="editSummernote" required rows="3"><?php echo htmlspecialchars($edit_q['question']); ?></textarea>
@@ -248,45 +279,109 @@ include '../includes/admin_nav.php'; // Unified Admin Navbar
                             <input type="file" name="edit_image" accept="image/*" style="width: 100%;">
                         </div>
                         
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                            <div>
-                                <label>Option A</label>
-                                <input type="text" name="a" value="<?php echo htmlspecialchars($edit_q['option_a']); ?>" required>
+                        <!-- SPLIT LAYOUT FOR ANSWERS -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
+                            
+                            <!-- OBJECTIVE COLUMN -->
+                            <div id="editObjCol" style="background: white; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 1.5rem; transition: all 0.3s ease;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                     <h4 style="margin: 0; color: var(--dark); font-size: 1rem;"><i class="fa-solid fa-list-ul me-2"></i>Objective Options</h4>
+                                     <div class="badge-pill" style="background: #e0e7ff; color: #4338ca; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 1rem;">Default</div>
+                                </div>
+
+                                <div style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
+                                    <div>
+                                        <label style="font-size: 0.8rem;">Option A</label>
+                                        <input type="text" name="a" id="editA" value="<?php echo htmlspecialchars($edit_q['option_a']); ?>">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.8rem;">Option B</label>
+                                        <input type="text" name="b" id="editB" value="<?php echo htmlspecialchars($edit_q['option_b']); ?>">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.8rem;">Option C</label>
+                                        <input type="text" name="c" id="editC" value="<?php echo htmlspecialchars($edit_q['option_c']); ?>">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.8rem;">Option D</label>
+                                        <input type="text" name="d" id="editD" value="<?php echo htmlspecialchars($edit_q['option_d']); ?>">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label>Correct Answer</label>
+                                    <select name="correct" id="editCorrect" class="modern-select">
+                                        <?php foreach (['A','B','C','D'] as $opt): ?>
+                                            <option value="<?php echo $opt; ?>" <?php echo ($edit_q['correct_answer'] ?? '') === $opt ? 'selected' : ''; ?>><?php echo $opt; ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
                             </div>
-                            <div>
-                                <label>Option B</label>
-                                <input type="text" name="b" value="<?php echo htmlspecialchars($edit_q['option_b']); ?>" required>
+
+                            <!-- THEORY COLUMN -->
+                            <div id="editTheoryCol" style="background: #fff7ed; border: 1px solid #ffedd5; border-radius: 1rem; padding: 1.5rem; transition: all 0.3s ease; opacity: 0.5;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                     <h4 style="margin: 0; color: #9a3412; font-size: 1rem;"><i class="fas fa-pen-alt me-2"></i>Theory Details</h4>
+                                     <div class="badge-pill" style="background: #ffedd5; color: #9a3412; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 1rem;">Essay</div>
+                                </div>
+                                <div style="margin-bottom: 1rem;">
+                                    <label style="color: #9a3412;">Model Answer / Grading Note</label>
+                                    <textarea name="model_answer" id="editModel" rows="6" 
+                                              style="width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #fdba74; background: white;"
+                                              placeholder="Enter expected answer..."><?php echo ($edit_q['type'] === 'theory' ? htmlspecialchars($edit_q['correct_answer']) : ''); ?></textarea>
+                                </div>
                             </div>
-                            <div>
-                                <label>Option C</label>
-                                <input type="text" name="c" value="<?php echo htmlspecialchars($edit_q['option_c']); ?>" required>
-                            </div>
-                            <div>
-                                <label>Option D</label>
-                                <input type="text" name="d" value="<?php echo htmlspecialchars($edit_q['option_d']); ?>" required>
-                            </div>
+
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-                             <div>
-                                <label>Correct Answer</label>
-                                <select name="correct" class="modern-select">
-                                    <?php foreach (['A','B','C','D'] as $opt): ?>
-                                        <option value="<?php echo $opt; ?>" <?php echo $edit_q['correct_answer'] === $opt ? 'selected' : ''; ?>><?php echo $opt; ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div>
-                                <label>Category</label>
-                                <input type="text" name="category" value="<?php echo htmlspecialchars($edit_q['category']); ?>">
-                            </div>
-                        </div>
-
-                        <div style="display: flex; gap: 1rem;">
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
                             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
                             <a href="view_questions.php" class="btn" style="background: var(--text-light); box-shadow: none;">Cancel</a>
                         </div>
                     </form>
+
+                    <script>
+                    function toggleEditType() {
+                        const type = document.getElementById('editType').value;
+                        const objCol = document.getElementById('editObjCol');
+                        const theoryCol = document.getElementById('editTheoryCol');
+                        
+                        const objInputs = ['editA', 'editB', 'editC', 'editD', 'editCorrect'];
+
+                        if (type === 'theory') {
+                            // Enable Theory
+                            theoryCol.style.opacity = '1';
+                            theoryCol.style.pointerEvents = 'auto';
+                            
+                            // Disable Obj
+                            objCol.style.opacity = '0.3';
+                            objCol.style.pointerEvents = 'none';
+                            
+                            // Update Required
+                             objInputs.forEach(id => {
+                                const el = document.getElementById(id);
+                                if(el) el.required = false;
+                            });
+
+                        } else {
+                            // Enable Obj
+                            objCol.style.opacity = '1';
+                            objCol.style.pointerEvents = 'auto';
+                            
+                            // Disable Theory
+                            theoryCol.style.opacity = '0.3';
+                            theoryCol.style.pointerEvents = 'none';
+
+                             // Update Required
+                             objInputs.forEach(id => {
+                                const el = document.getElementById(id);
+                                if(el) el.required = true;
+                            });
+                        }
+                    }
+                    // Run on load
+                    document.addEventListener('DOMContentLoaded', toggleEditType);
+                    </script>
                 </div>
             <?php endif; ?>
 

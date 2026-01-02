@@ -17,6 +17,9 @@
     <style>
         :root {
             --app-font: '<?php echo $current_font_family; ?>', sans-serif;
+            --primary: <?php echo $app_settings['brand_color']; ?>;
+            --primary-hover: <?php echo $app_settings['brand_color']; ?>dd; /* Slight opacity for hover */
+            --primary-light: <?php echo $app_settings['brand_color']; ?>15; /* 10% opacity */
         }
     </style>
 

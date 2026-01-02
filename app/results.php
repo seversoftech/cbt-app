@@ -79,12 +79,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Now save Theory Responses
     if ($has_theory) {
-        $resp_stmt = $pdo->prepare("INSERT INTO student_responses (result_id, student_id, question_id, answer_text) VALUES (?, ?, ?, ?)");
-        foreach ($questions as $index => $q) {
-            if (($q['type'] ?? 'objective') === 'theory') {
-                $ans = $_POST["q{$index}"] ?? '';
-                $resp_stmt->execute([$result_id, $student_id, $q['id'], $ans]);
+        try {
+            $resp_stmt = $pdo->prepare("INSERT INTO student_responses (result_id, student_id, question_id, answer_text) VALUES (?, ?, ?, ?)");
+            foreach ($questions as $index => $q) {
+                if (($q['type'] ?? 'objective') === 'theory') {
+                    $ans = $_POST["q{$index}"] ?? '';
+                    // Log for debugging
+                    file_put_contents('debug_grading.txt', "Saving Theory Q{$q['id']}: $ans\n", FILE_APPEND);
+                    $resp_stmt->execute([$result_id, $student_id, $q['id'], $ans]);
+                }
             }
+        } catch (Exception $e) {
+            file_put_contents('debug_grading_error.txt', "Error saving responses: " . $e->getMessage(), FILE_APPEND);
         }
     }
 
@@ -285,26 +291,43 @@ $failed_questions = $_SESSION['failed_questions'] ?? [];
              Subject: <?php echo htmlspecialchars($_GET['subject'] ?? 'General'); ?>
         </div>
         
-        <div class="score-circle">
-            <div class="score-value">
-                <span class="score-number"><?php echo number_format($percentage, 0); ?>%</span>
-                <span class="score-total"><?php echo $score; ?> / <?php echo $total; ?></span>
+        <?php if ($status_param === 'pending_grading'): ?>
+            <!-- PENDING GRADING VIEW -->
+            <div style="margin-bottom: 2.5rem;">
+                <div style="background: #fff7ed; width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; border: 4px solid #ffedd5;">
+                    <i class="fas fa-hourglass-half" style="font-size: 3rem; color: #ea580c;"></i>
+                </div>
+                <h2 style="color: #ea580c; margin-bottom: 0.5rem;">Submission Received</h2>
+                <div class="status-badge" style="background: #fff7ed; color: #ea580c; border-color: #ffedd5; margin-bottom: 1rem;">
+                    Pending Grading
+                </div>
+                <p style="color: var(--text-light); font-size: 1.1rem; line-height: 1.5;">
+                    Your assessment includes essay questions which require manual grading by an instructor. 
+                    <br><strong>Your score is not yet available.</strong>
+                    <br>Please check back later via the Student Portal.
+                </p>
             </div>
-        </div>
+        <?php else: ?>
+            <!-- GRADED VIEW -->
+            <div class="score-circle">
+                <div class="score-value">
+                    <span class="score-number"><?php echo number_format($percentage, 0); ?>%</span>
+                    <span class="score-total"><?php echo $score; ?> / <?php echo $total; ?></span>
+                </div>
+            </div>
 
-        <div class="status-badge">
-            <?php echo $statusText; ?>
-        </div>
+            <div class="status-badge">
+                <?php echo $statusText; ?>
+            </div>
 
-        <p style="color: var(--text-light); font-size: 1.1rem; margin-bottom: 2.5rem;">
-            <?php if ($status_param === 'pending_grading'): ?>
-                 <i class="fas fa-clock" style="color: var(--warning);"></i> Your objective score is ready. Theory answers have been submitted for manual grading.
-            <?php elseif ($percentage >= 50): ?>
-                <i class="fas fa-check-circle" style="color: var(--secondary);"></i> Great job! You passed the exam.
-            <?php else: ?>
-                <i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> Don't give up! Keep practicing.
-            <?php endif; ?>
-        </p>
+            <p style="color: var(--text-light); font-size: 1.1rem; margin-bottom: 2.5rem;">
+                <?php if ($percentage >= 50): ?>
+                    <i class="fas fa-check-circle" style="color: var(--secondary);"></i> Great job! You passed the exam.
+                <?php else: ?>
+                    <i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> Don't give up! Keep practicing.
+                <?php endif; ?>
+            </p>
+        <?php endif; ?>
 
         <a href="index.php" class="btn" style="width: 100%; padding: 1rem; font-size: 1.1rem; justify-content: center;">
             <i class="fas fa-redo"></i> Take Another Test

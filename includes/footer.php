@@ -1,53 +1,93 @@
 <?php
 $current_year = date('Y');
 ?>
-<footer class="app-footer">
-    <div class="footer-content">
-        <div class="footer-left">
-            <span>&copy; <?php echo $current_year; ?> Seversoft CBT App</span>
-            <span class="divider">|</span>
-            <span>Built with <i class="fas fa-heart text-danger"></i> by Seversoft</span>
+    <footer class="app-footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="footer-brand">
+                    <i class="fas fa-graduation-cap" style="color: var(--primary);"></i>
+                    <span><?php echo $app_settings['institution_name'] ?? 'Seversoft CBT'; ?></span>
+                </div>
+                <div class="copyright">
+                    &copy; <?php echo date('Y'); ?> All Rights Reserved.
+                </div>
+            </div>
+            
+            <div class="footer-center">
+                <a href="../app/support.php" class="footer-link">Support</a>
+                <a href="../app/privacy.php" class="footer-link">Privacy Policy</a>
+                <a href="../app/terms.php" class="footer-link">Terms of Use</a>
+            </div>
+
+            <div class="footer-right">
+                <a href="https://github.com/seversoftech" target="_blank" class="social-icon" aria-label="Github"><i class="fab fa-github"></i></a>
+                 <a href="https://linkedin.com/in/seversoftech" target="_blank" class="social-icon" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                <a href="https://facebook.com/seversoftech" target="_blank" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://twitter.com/seversoftech" target="_blank" class="social-icon" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+               
+               
+                 <a href="https://instagram.com/seversoftech" target="_blank" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
         </div>
-        <div class="footer-right">
-            <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
-            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-        </div>
-    </div>
-</footer>
+    </footer>
 
 <!-- Theme Toggle Button -->
 <button class="theme-toggle" id="themeToggle" aria-label="Toggle Dark Mode">
     <i class="fas fa-moon"></i>
 </button>
 
-<script>
-    const toggleBtn = document.getElementById('themeToggle');
-    const html = document.documentElement;
-    const icon = toggleBtn.querySelector('i');
+<!-- Custom Loader -->
+<div id="appLoader" class="custom-loader-overlay">
+    <div class="spinner"></div>
+    <div class="loader-text">Processing...</div>
+</div>
 
+<script>
+    // Original theme toggle logic
+    const toggleBtn = document.getElementById('themeToggle');
+    
     // Set initial icon based on current theme
-    if (html.getAttribute('data-theme') === 'dark') {
-        icon.classList.remove('fa-moon');
-        icon.classList.add('fa-sun');
+    document.addEventListener('DOMContentLoaded', () => {
+        const saved = localStorage.getItem('theme') || 'light';
+        const icon = document.querySelector('.theme-toggle i');
+        if(icon) icon.className = saved === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    });
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            toggleTheme();
+        });
     }
 
-    toggleBtn.addEventListener('click', () => {
-        const currentTheme = html.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    // Global Scripts
+    // Toggle Theme
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
         
-        html.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        
-        // Toggle Icon
-        if (newTheme === 'dark') {
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        } else {
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
+        // Update icon
+        const icon = document.querySelector('.theme-toggle i');
+        if (icon) icon.className = next === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
+    // Loader Helpers
+    const AppLoader = {
+        show: (text = 'Processing...') => {
+            const loader = document.getElementById('appLoader');
+            if (loader) {
+                const textEl = loader.querySelector('.loader-text');
+                if (textEl) textEl.textContent = text;
+                loader.style.display = 'flex';
+            }
+        },
+        hide: () => {
+            const loader = document.getElementById('appLoader');
+            if (loader) loader.style.display = 'none';
         }
-    });
+    };
 </script>
 
 <script src="../assets/js/script.js"></script>
