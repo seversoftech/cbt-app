@@ -924,6 +924,7 @@ tr:hover td {
     .app-footer {
         padding: 1.5rem 0;
         backdrop-filter: blur(25px); /* Increased blur for mobile legibility */
+        position: relative; /* Fix for mobile blocking content */
     }
 
     .footer-content {
@@ -984,7 +985,7 @@ tr:hover td {
     
     /* Ensure footer doesn't overlap content too much if it's tall */
     body {
-        padding-bottom: 350px; /* Increased padding for tall mobile footer */
+        padding-bottom: 0; /*  Reset padding for relative footer */
     }
 }
 
