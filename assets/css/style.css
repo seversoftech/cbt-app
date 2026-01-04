@@ -920,6 +920,74 @@ tr:hover td {
     gap: 1rem;
 }
 
+@media (max-width: 768px) {
+    .app-footer {
+        padding: 1.5rem 0;
+        backdrop-filter: blur(25px); /* Increased blur for mobile legibility */
+    }
+
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+
+    .footer-left {
+        align-items: center;
+        order: 1; /* Brand on top */
+        width: 100%;
+        border-bottom: 1px solid var(--glass-border);
+        padding-bottom: 1.5rem;
+    }
+
+    .footer-brand {
+         font-size: 1.25rem;
+         justify-content: center;
+    }
+
+    .footer-center {
+        flex-direction: column;
+        gap: 1.25rem;
+        order: 2; /* Links in middle */
+        width: 100%;
+    }
+    
+    .footer-link {
+        padding: 0.5rem;
+        font-size: 1rem;
+        display: block;
+        background: rgba(var(--primary-rgb), 0.03); /* Subtle backdrop */
+        border-radius: var(--radius-md);
+    }
+    
+    .footer-right {
+        order: 3; /* Socials at bottom */
+        justify-content: center;
+        width: 100%;
+        padding-top: 1rem;
+        border-top: 1px solid var(--glass-border);
+    }
+    
+    .social-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.1rem;
+    }
+    
+    /* Adjust theme toggle position for mobile footer */
+    .theme-toggle {
+        bottom: 20px; 
+        right: 20px;
+        width: 3rem; 
+        height: 3rem;
+    }
+    
+    /* Ensure footer doesn't overlap content too much if it's tall */
+    body {
+        padding-bottom: 350px; /* Increased padding for tall mobile footer */
+    }
+}
+
 .social-icon {
     width: 2rem;
     height: 2rem;

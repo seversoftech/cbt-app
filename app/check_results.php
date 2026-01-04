@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['student_id'])) {
             </div>
         <?php endif; ?>
 
-        <?php if (!empty($search_results) && !$is_modal): ?>
+        <?php if (!empty($search_results)): ?>
         <div style="text-align: left; margin-bottom: 2rem;">
              <a href="index.php" class="btn" style="background: transparent; color: var(--text-light); border: 1px solid var(--glass-border); display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem;">
                 <i class="fas fa-arrow-left"></i> Back to Home
@@ -172,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['student_id'])) {
     </div>
 </main>
 
-<?php include '../includes/footer.php'; ?>
+<?php if (!$is_modal) { include '../includes/footer.php'; } ?>
 <script src="../assets/js/script.js"></script>
 </body>
 </html>

@@ -14,7 +14,7 @@ $current_year = date('Y');
             </div>
             
             <div class="footer-center">
-                <a href="../app/check_results.php" class="footer-link">Check Results</a>
+                <a href="../app/check_results.php" class="footer-link" id="footerCheckResult">Check Results</a>
                 <a href="../app/support.php" class="footer-link">Support</a>
                 <a href="../app/privacy.php" class="footer-link">Privacy Policy</a>
                 <a href="../app/terms.php" class="footer-link">Terms of Use</a>
@@ -44,6 +44,21 @@ $current_year = date('Y');
 </div>
 
 <script>
+    // Handle Check Results Link
+    document.addEventListener('DOMContentLoaded', () => {
+        const checkResultLink = document.getElementById('footerCheckResult');
+        if (checkResultLink) {
+            checkResultLink.addEventListener('click', (e) => {
+                // If openResultModal is defined (we are on index.php), use it
+                if (typeof openResultModal === 'function') {
+                    e.preventDefault();
+                    openResultModal();
+                }
+                // Otherwise let it navigate normally
+            });
+        }
+    });
+
     // Original theme toggle logic
     const toggleBtn = document.getElementById('themeToggle');
     
