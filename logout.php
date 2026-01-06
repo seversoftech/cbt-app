@@ -14,3 +14,5 @@ if (ini_get("session.use_cookies")) {
 
 header('Location: admin/index.php');
 exit;
+
+
