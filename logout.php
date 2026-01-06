@@ -1,7 +1,7 @@
 <?php
-session_start();          // Start the session
-session_unset();          // Clear all session variables
-session_destroy();        // Destroy the session
+session_start();          
+session_unset();          
+session_destroy();        
 
 // Optional: delete session cookie
 if (ini_get("session.use_cookies")) {
