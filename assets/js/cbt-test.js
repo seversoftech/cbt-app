@@ -443,7 +443,7 @@ async function saveState() {
     }
 }
 
-// Navigation functions remain the same
+// Navigation functions remain the same...
 function nextQuestion() {
     if (currentQuestionIndex < questions.length - 1) {
         hideCurrentQuestion();
