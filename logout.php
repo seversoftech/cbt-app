@@ -3,7 +3,7 @@ session_start();
 session_unset();          
 session_destroy();        
 
-// Optional: delete session cookie
+// Optional
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(session_name(), '', time() - 42000,
