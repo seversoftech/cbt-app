@@ -11,6 +11,8 @@
             <p style="color: var(--text-light);">We are here to help you have a smooth examination experience.</p>
         </div>
 
+
+        
         <div style="display: grid; gap: 1.5rem;">
             <!-- FAQ Section -->
             <div style="margin-bottom: 2rem;">
